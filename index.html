@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillHive | Pakistan's Trusted Professional Network</title>
+    <meta property="og:title" content="SkillHive | Pakistan's Trusted Professional Network" />
+    <meta property="og:description" content="Find and book verified local experts, electricians, and technicians instantly in your city." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=1200&auto=format&fit=crop" />
+    <meta name="description" content="SkillHive — Pakistan's trusted platform to find verified local professionals. Find plumbers, electricians, and AC technicians near you instantly.">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+
+        :root {
+            --navy:       #0d1f3c;
+            --navy-mid:   #1a3a5c;
+            --navy-light: #2a5298;
+            --gold:       #f5a623;
+            --gold-dark:  #d4891a;
+            --white:      #ffffff;
+            --text-light: rgba(255,255,255,0.85);
+            --shadow-lg:  0 25px 60px rgba(0,0,0,0.35);
+            --radius-xl:  24px;
+            --radius-md:  12px;
+        }
+
+        html, body { height:100%; overflow:hidden; background:var(--navy); }
+        body { display:flex; justify-content:center; align-items:center; position:relative; }
+
+        /* ── Background ─────────────────────────────────────────────────── */
+        .bg-layer {
+            position:fixed; inset:0; z-index:0;
+            background: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=2074&auto=format&fit=crop') center/cover no-repeat;
+            filter:blur(10px) brightness(0.55) saturate(0.8);
+            transform:scale(1.08);
+        }
+        .bg-gradient-overlay {
+            position:fixed; inset:0; z-index:1;
+            background:linear-gradient(135deg, rgba(13,31,60,0.65) 0%, rgba(26,58,92,0.45) 50%, rgba(13,31,60,0.75) 100%);
+        }
+
+        /* ── Glass Card ─────────────────────────────────────────────────── */
+        .glass-card {
+            position:absolute; z-index:10;
+            background:rgba(255,255,255,0.10);
+            backdrop-filter:blur(30px) saturate(180%);
+            -webkit-backdrop-filter:blur(30px) saturate(180%);
+            border:1px solid rgba(255,255,255,0.22);
+            border-radius:var(--radius-xl);
+            box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.2);
+            width:90%; max-width:450px;
+            padding:44px 36px;
+            animation:cardPop 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
+            text-align:center;
+        }
+        @keyframes cardPop {
+            from { opacity:0; transform:scale(0.92) translateY(16px); }
+            to   { opacity:1; transform:scale(1) translateY(0); }
+        }
+
+        /* ── Logo ───────────────────────────────────────────────────────── */
+        .logo-area { margin-bottom:40px; }
+        .logo-area h1 {
+            font-size:3.2rem; font-weight:800; color:var(--white);
+            letter-spacing:-2px; line-height:1;
+            text-shadow:0 4px 20px rgba(0,0,0,0.3);
+        }
+        .logo-area h1 .highlight { color:var(--gold); }
+        .logo-tagline {
+            color:var(--text-light); font-size:0.95rem;
+            margin-top:10px; font-weight:400; letter-spacing:0.5px;
+        }
+
+        /* ── Divider ────────────────────────────────────────────────────── */
+        .section-divider {
+            display:flex; align-items:center; gap:12px;
+            color:rgba(255,255,255,0.35); font-size:0.7rem;
+            font-weight:600; letter-spacing:1.5px; margin:20px 0;
+        }
+        .section-divider::before, .section-divider::after {
+            content:''; flex:1; border-bottom:1px solid rgba(255,255,255,0.15);
+        }
+
+        /* ── Buttons ────────────────────────────────────────────────────── */
+        .action-buttons { display:flex; flex-direction:column; gap:14px; }
+
+        .action-btn {
+            width:100%; padding:17px 20px; border-radius:var(--radius-md);
+            font-size:1rem; font-weight:600; border:none; cursor:pointer;
+            display:flex; justify-content:center; align-items:center;
+            gap:12px; transition:all 0.28s ease;
+            position:relative; overflow:hidden; letter-spacing:0.2px;
+        }
+        .action-btn::after {
+            content:''; position:absolute; inset:0;
+            background:rgba(255,255,255,0); transition:background 0.25s;
+        }
+        .action-btn:hover::after { background:rgba(255,255,255,0.09); }
+
+        .btn-find {
+            background:linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+            color:var(--white);
+            box-shadow:0 6px 24px rgba(26,58,92,0.5);
+        }
+        .btn-find:hover { transform:translateY(-2px); box-shadow:0 10px 32px rgba(26,58,92,0.65); }
+
+        .btn-join {
+            background:rgba(255,255,255,0.96);
+            color:var(--navy-mid);
+            box-shadow:0 6px 20px rgba(0,0,0,0.18);
+        }
+        .btn-join:hover { transform:translateY(-2px); background:var(--white); box-shadow:0 10px 28px rgba(0,0,0,0.28); }
+
+        .btn-admin {
+            background:transparent;
+            border:1.5px solid rgba(255,255,255,0.22);
+            color:rgba(255,255,255,0.55);
+            font-size:0.82rem; font-weight:500; padding:11px 20px;
+        }
+        .btn-admin:hover {
+            border-color:rgba(255,255,255,0.4);
+            color:rgba(255,255,255,0.8);
+            background:rgba(255,255,255,0.05);
+        }
+
+        /* ── Trust Badge ────────────────────────────────────────────────── */
+        .trust-badge {
+            margin-top:28px;
+            display:flex; align-items:center; justify-content:center;
+            gap:6px; color:rgba(255,255,255,0.4); font-size:0.75rem;
+        }
+        .trust-badge i { color:var(--gold); font-size:0.7rem; }
+
+        @media (max-width: 768px) {
+            .glass-card { padding: 36px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-layer"></div>
+    <div class="bg-gradient-overlay"></div>
+
+    <div class="glass-card" id="entryGateway">
+        <div class="logo-area">
+            <h1>Skill<span class="highlight">Hive</span></h1>
+            <p class="logo-tagline">Pakistan's Trusted Professional Network</p>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-btn btn-find" id="btnFindPro"
+                    onclick="window.location.href='search.html'">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                Find a Professional
+            </button>
+            <button class="action-btn btn-join" id="btnJoinPro"
+                    onclick="window.location.href='join-pro.html'">
+                <i class="fa-solid fa-user-shield"></i>
+                Join as a Professional
+            </button>
+        </div>
+
+        <div class="section-divider">ADMIN</div>
+
+        <button class="action-btn btn-admin" id="btnAdmin"
+                onclick="window.location.href='admin-portal.html'">
+            <i class="fa-solid fa-lock"></i>
+            Admin Command Center
+        </button>
+
+        <div class="trust-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+            All professionals are manually verified
+        </div>
+    </div>
+
+</body>
+</html>

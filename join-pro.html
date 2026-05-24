@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillHive | Join as a Professional</title>
+    <meta property="og:title" content="SkillHive | Pakistan's Trusted Professional Network" />
+    <meta property="og:description" content="Find and book verified local experts, electricians, and technicians instantly in your city." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=1200&auto=format&fit=crop" />
+    <meta name="description" content="Join SkillHive as a verified professional. Plumbers, electricians, and AC technicians — register now and connect with clients in your area.">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ═══════════════════════════════════════════════════════════════════
+           DESIGN TOKENS & RESET
+        ═══════════════════════════════════════════════════════════════════ */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            --navy:         #0a1628;
+            --navy-mid:     #1a3a5c;
+            --navy-light:   #2a5298;
+            --gold:         #f5a623;
+            --gold-dark:    #d4891a;
+            --gold-glow:    rgba(245,166,35,0.35);
+            --white:        #ffffff;
+            --glass-bg:     rgba(255,255,255,0.07);
+            --glass-border: rgba(255,255,255,0.18);
+            --text-light:   rgba(255,255,255,0.75);
+            --text-muted:   rgba(255,255,255,0.5);
+            --green:        #22c55e;
+            --red:          #ef4444;
+
+            --shadow-card:  0 32px 80px rgba(0,0,0,0.5);
+            --shadow-btn:   0 8px 24px rgba(0,0,0,0.25);
+            --radius-xl:    28px;
+            --radius-lg:    18px;
+            --radius-md:    12px;
+            --radius-sm:    8px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            min-height: 100vh; background: var(--navy);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start;
+            padding: 0; position: relative; overflow-x: hidden;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           ANIMATED MESH BACKGROUND
+        ═══════════════════════════════════════════════════════════════════ */
+        .mesh-bg {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(42,82,152,0.4) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 80%, rgba(26,58,92,0.5) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 50%, rgba(10,22,40,0.8) 0%, transparent 100%);
+            background-color: var(--navy);
+        }
+
+        .mesh-orb {
+            position: fixed; border-radius: 50%; filter: blur(80px);
+            z-index: 0; pointer-events: none;
+        }
+        .mesh-orb-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%);
+            top: -100px; right: -100px;
+            animation: orbFloat1 12s ease-in-out infinite alternate;
+        }
+        .mesh-orb-2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(42,82,152,0.18) 0%, transparent 70%);
+            bottom: -80px; left: -80px;
+            animation: orbFloat2 10s ease-in-out infinite alternate;
+        }
+        .mesh-orb-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(26,58,92,0.25) 0%, transparent 70%);
+            top: 40%; left: 30%;
+            animation: orbFloat1 15s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes orbFloat1 {
+            from { transform: translate(0, 0) scale(1); }
+            to   { transform: translate(40px, 30px) scale(1.08); }
+        }
+        @keyframes orbFloat2 {
+            from { transform: translate(0, 0) scale(1); }
+            to   { transform: translate(-30px, 40px) scale(1.06); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           MAIN PAGE LAYOUT
+        ═══════════════════════════════════════════════════════════════════ */
+        .page-wrapper {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 580px;
+            padding: 32px 16px 60px;
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+        }
+
+        /* ── Header ─────────────────────────────────────────────────────── */
+        .page-header {
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 32px;
+        }
+        .header-back-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            color: var(--white); cursor: pointer; display: flex;
+            align-items: center; justify-content: center; flex-shrink: 0;
+            transition: all 0.25s; font-size: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        .header-back-btn:hover {
+            background: rgba(255,255,255,0.15); transform: scale(1.08);
+        }
+
+        .header-title-group h1 {
+            font-size: 1.5rem; font-weight: 800; color: var(--white);
+            letter-spacing: -0.5px; line-height: 1.1;
+        }
+        .header-title-group p {
+            color: var(--text-muted); font-size: 0.82rem;
+            margin-top: 3px; font-weight: 400;
+        }
+
+        .header-logo {
+            margin-left: auto; font-size: 1.3rem; font-weight: 800;
+            color: var(--white); letter-spacing: -0.5px;
+        }
+        .header-logo span { color: var(--gold); }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           STEPPER PROGRESS BAR
+        ═══════════════════════════════════════════════════════════════════ */
+        .stepper-container {
+            margin-bottom: 32px;
+        }
+
+        .stepper-track {
+            display: flex; align-items: center; gap: 0;
+            position: relative;
+        }
+
+        .stepper-step {
+            display: flex; flex-direction: column; align-items: center;
+            flex: 1; position: relative; z-index: 1;
+        }
+
+        .step-circle {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            color: var(--text-muted); font-size: 0.85rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.5s cubic-bezier(0.34,1.3,0.64,1);
+            position: relative;
+        }
+        .stepper-step.active .step-circle {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--navy);
+            box-shadow: 0 0 0 6px rgba(245,166,35,0.2), 0 4px 16px var(--gold-glow);
+            transform: scale(1.12);
+        }
+        .stepper-step.done .step-circle {
+            background: var(--green);
+            border-color: var(--green);
+            color: white;
+            box-shadow: 0 4px 12px rgba(34,197,94,0.35);
+        }
+
+        .step-label {
+            font-size: 0.72rem; color: var(--text-muted); margin-top: 8px;
+            font-weight: 500; letter-spacing: 0.2px; text-align: center;
+            transition: color 0.4s;
+        }
+        .stepper-step.active .step-label { color: var(--gold); font-weight: 700; }
+        .stepper-step.done .step-label   { color: var(--green); }
+
+        .stepper-line {
+            flex: 1; height: 2px;
+            background: rgba(255,255,255,0.12);
+            margin-top: -24px; /* Align with circles */
+            position: relative; z-index: 0;
+            transition: background 0.5s;
+        }
+        .stepper-line.done { background: var(--green); }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           GLASS CARD — FORM CONTAINER
+        ═══════════════════════════════════════════════════════════════════ */
+        .form-card {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(32px) saturate(160%);
+            -webkit-backdrop-filter: blur(32px) saturate(160%);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: var(--radius-xl);
+            padding: 32px 28px;
+            box-shadow: var(--shadow-card),
+                        inset 0 1px 0 rgba(255,255,255,0.12);
+            flex: 1;
+        }
+
+        /* ── Step Panels ─────────────────────────────────────────────────── */
+        .step-panel {
+            display: none;
+            animation: panelSlideIn 0.42s cubic-bezier(0.34,1.1,0.64,1) forwards;
+        }
+        .step-panel.active { display: block; }
+
+        @keyframes panelSlideIn {
+            from { opacity: 0; transform: translateX(24px) scale(0.98); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes panelSlideBack {
+            from { opacity: 0; transform: translateX(-24px) scale(0.98); }
+            to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        .step-panel.slide-back { animation: panelSlideBack 0.42s cubic-bezier(0.34,1.1,0.64,1) forwards; }
+
+        /* ── Section Title ───────────────────────────────────────────────── */
+        .section-title {
+            margin-bottom: 24px;
+        }
+        .section-title h2 {
+            font-size: 1.3rem; font-weight: 800; color: var(--white);
+            letter-spacing: -0.4px; display: flex; align-items: center; gap: 10px;
+        }
+        .section-title h2 .icon-badge {
+            width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; color: var(--navy); flex-shrink: 0;
+        }
+        .section-title p {
+            color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           FORM ELEMENTS
+        ═══════════════════════════════════════════════════════════════════ */
+        .field-group { margin-bottom: 16px; }
+
+        .field-label {
+            display: block; font-size: 0.78rem; font-weight: 600;
+            color: var(--text-light); letter-spacing: 0.6px;
+            text-transform: uppercase; margin-bottom: 8px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+        .input-wrap .field-icon {
+            position: absolute; left: 15px; top: 50%;
+            transform: translateY(-50%); color: var(--gold);
+            font-size: 0.95rem; z-index: 2; pointer-events: none;
+        }
+        .input-wrap input,
+        .input-wrap select {
+            width: 100%; padding: 14px 14px 14px 44px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.9);
+            color: #1a2740; font-size: 0.93rem;
+            outline: none; appearance: none;
+            transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+            font-family: 'Inter', sans-serif;
+        }
+        .input-wrap input:focus,
+        .input-wrap select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(245,166,35,0.15);
+            background: var(--white);
+        }
+        .input-wrap input.valid { border-color: var(--green); }
+        .input-wrap input.invalid { border-color: var(--red); }
+
+        /* Number input arrows removal */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        /* Phone prefix */
+        .phone-row {
+            display: flex; gap: 8px;
+        }
+        .phone-prefix {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.9); border: 1.5px solid rgba(255,255,255,0.18);
+            border-radius: var(--radius-md); padding: 14px 14px;
+            color: #1a2740; font-size: 0.93rem; font-weight: 600;
+            white-space: nowrap; cursor: default; min-width: 82px;
+            justify-content: center;
+        }
+        .phone-prefix .flag { font-size: 1.1rem; }
+        .phone-row .input-wrap { flex: 1; }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           STEP 1 — LOCATION
+        ═══════════════════════════════════════════════════════════════════ */
+        .location-verify-btn {
+            width: 100%; padding: 16px; border-radius: var(--radius-md);
+            border: 2px solid var(--gold);
+            background: linear-gradient(135deg, rgba(245,166,35,0.12), rgba(245,166,35,0.06));
+            color: var(--gold); font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 10px; margin-bottom: 10px;
+            transition: all 0.25s; letter-spacing: 0.3px;
+        }
+        .location-verify-btn:hover {
+            background: rgba(245,166,35,0.2); transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--gold-glow);
+        }
+
+        .location-result-card {
+            border-radius: var(--radius-md); padding: 14px 16px;
+            background: rgba(34,197,94,0.1); border: 1.5px solid rgba(34,197,94,0.35);
+            display: none; margin-bottom: 14px;
+            animation: cardPop 0.3s ease;
+        }
+        .location-result-card.show { display: block; }
+        .location-result-card .coords-row {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+        }
+        .location-result-card .coords-icon {
+            color: var(--green); font-size: 1.1rem;
+        }
+        .location-result-card .coords-text {
+            color: var(--white); font-size: 0.87rem; font-weight: 600;
+        }
+        .location-result-card .coords-sub {
+            color: var(--green); font-size: 0.75rem; font-weight: 500;
+        }
+
+        @keyframes cardPop {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .divider-or {
+            display: flex; align-items: center; margin: 16px 0;
+            color: var(--text-muted); font-size: 0.78rem;
+            font-weight: 600; letter-spacing: 1px;
+        }
+        .divider-or::before, .divider-or::after {
+            content: ''; flex: 1;
+            border-bottom: 1px solid rgba(255,255,255,0.12); margin: 0 12px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           STEP 3 — CAMERA & PORTFOLIO
+        ═══════════════════════════════════════════════════════════════════ */
+
+        /* Camera UI */
+        .camera-trigger-area {
+            border: 2px dashed rgba(255,255,255,0.25);
+            border-radius: var(--radius-lg);
+            padding: 28px 20px;
+            text-align: center; cursor: pointer;
+            transition: all 0.3s; margin-bottom: 16px;
+            background: rgba(255,255,255,0.04);
+        }
+        .camera-trigger-area:hover {
+            border-color: var(--gold); background: rgba(245,166,35,0.06);
+        }
+        .camera-trigger-area .cam-icon {
+            font-size: 2.2rem; color: var(--gold); margin-bottom: 10px;
+        }
+        .camera-trigger-area p {
+            color: var(--text-light); font-size: 0.9rem; font-weight: 500;
+        }
+        .camera-trigger-area small { color: var(--text-muted); font-size: 0.78rem; }
+
+        #cameraContainer {
+            display: none; border-radius: var(--radius-lg); overflow: hidden;
+            margin-bottom: 14px; border: 2px solid var(--gold);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4); background: #000;
+        }
+        #liveVideo { width: 100%; height: auto; display: block; max-height: 280px; object-fit: cover; }
+
+        .capture-btn {
+            width: 100%; padding: 14px; border: none;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: var(--navy); font-weight: 800; font-size: 1rem;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 10px; border-radius: 0;
+            transition: opacity 0.2s;
+        }
+        .capture-btn:hover { opacity: 0.9; }
+
+        #selfiePreviewWrap {
+            display: none; text-align: center; margin-bottom: 16px;
+        }
+        #selfiePreview {
+            width: 110px; height: 110px; border-radius: 50%;
+            object-fit: cover; border: 4px solid var(--gold);
+            box-shadow: 0 0 0 6px rgba(245,166,35,0.2), 0 8px 24px rgba(0,0,0,0.4);
+        }
+        #selfieLabel {
+            display: block; color: var(--green); font-size: 0.82rem;
+            font-weight: 600; margin-top: 10px;
+        }
+        #selfieRetakeBtn {
+            background: none; border: 1px solid rgba(255,255,255,0.25);
+            color: var(--text-light); font-size: 0.78rem; width: auto;
+            padding: 6px 14px; border-radius: 20px; cursor: pointer;
+            margin-top: 8px; display: inline-flex; gap: 6px;
+            transition: all 0.2s;
+        }
+        #selfieRetakeBtn:hover { border-color: var(--gold); color: var(--gold); }
+
+        /* Portfolio Upload */
+        .portfolio-upload-area {
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: var(--radius-lg); padding: 24px 16px;
+            text-align: center; cursor: pointer;
+            transition: all 0.3s; margin-bottom: 14px;
+            background: rgba(255,255,255,0.03);
+            position: relative;
+        }
+        .portfolio-upload-area:hover {
+            border-color: rgba(245,166,35,0.6);
+            background: rgba(245,166,35,0.04);
+        }
+        .portfolio-upload-area.drag-over {
+            border-color: var(--gold); background: rgba(245,166,35,0.08);
+        }
+        .portfolio-upload-area input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+            width: 100%; height: 100%;
+        }
+        .portfolio-upload-area .upload-icon {
+            font-size: 2rem; color: rgba(255,255,255,0.4); margin-bottom: 10px;
+        }
+        .portfolio-upload-area .upload-title {
+            color: var(--text-light); font-size: 0.9rem; font-weight: 600;
+        }
+        .portfolio-upload-area .upload-sub {
+            color: var(--text-muted); font-size: 0.78rem; margin-top: 4px;
+        }
+
+        #portfolioGrid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; margin-top: 12px;
+        }
+        .portfolio-thumb {
+            aspect-ratio: 1; border-radius: var(--radius-sm);
+            overflow: hidden; position: relative;
+            border: 2px solid rgba(255,255,255,0.15);
+        }
+        .portfolio-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .portfolio-thumb .thumb-remove {
+            position: absolute; top: 4px; right: 4px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: rgba(239,68,68,0.9); color: white;
+            font-size: 0.65rem; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .portfolio-count-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.3);
+            color: var(--gold); padding: 4px 12px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600; margin-top: 10px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           NAVIGATION BUTTONS
+        ═══════════════════════════════════════════════════════════════════ */
+        .nav-btns {
+            display: flex; gap: 10px; margin-top: 26px;
+        }
+        .nav-btns button { padding: 15px; border-radius: var(--radius-md); }
+
+        .btn-next {
+            flex: 1; background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+            color: var(--white); border: none; font-size: 0.97rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 8px; transition: all 0.25s;
+            box-shadow: 0 6px 20px rgba(26,58,92,0.4);
+        }
+        .btn-next:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(26,58,92,0.55); }
+
+        .btn-submit {
+            flex: 1;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: var(--navy); border: none; font-size: 0.97rem; font-weight: 800;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 8px; transition: all 0.25s;
+            box-shadow: 0 6px 20px var(--gold-glow);
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(245,166,35,0.5); }
+        .btn-submit:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
+
+        .btn-back-step {
+            background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.18);
+            color: var(--text-light); flex: 0 0 auto; padding: 15px 20px;
+            border-radius: var(--radius-md); cursor: pointer;
+            display: flex; align-items: center; gap: 7px; font-size: 0.9rem;
+            transition: all 0.25s; font-weight: 500;
+        }
+        .btn-back-step:hover { background: rgba(255,255,255,0.12); color: var(--white); }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           SUCCESS SCREEN
+        ═══════════════════════════════════════════════════════════════════ */
+        #successScreen {
+            display: none; text-align: center; padding: 40px 0;
+            animation: cardPop 0.6s cubic-bezier(0.34,1.4,0.64,1) forwards;
+        }
+        .success-icon {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--green), #16a34a);
+            margin: 0 auto 24px; display: flex; align-items: center;
+            justify-content: center; font-size: 2.5rem; color: white;
+            box-shadow: 0 0 0 12px rgba(34,197,94,0.15), 0 12px 40px rgba(34,197,94,0.4);
+            animation: successPulse 2s ease-in-out infinite;
+        }
+        @keyframes successPulse {
+            0%, 100% { box-shadow: 0 0 0 12px rgba(34,197,94,0.15), 0 12px 40px rgba(34,197,94,0.4); }
+            50%       { box-shadow: 0 0 0 20px rgba(34,197,94,0.08), 0 12px 40px rgba(34,197,94,0.5); }
+        }
+        #successScreen h2 {
+            font-size: 1.6rem; font-weight: 800; color: var(--white);
+            margin-bottom: 12px; letter-spacing: -0.4px;
+        }
+        #successScreen p {
+            color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;
+            max-width: 320px; margin: 0 auto 28px;
+        }
+        .back-home-btn {
+            background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+            color: white; padding: 15px 30px; border: none; border-radius: var(--radius-md);
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 10px;
+            transition: all 0.25s; box-shadow: 0 6px 20px rgba(26,58,92,0.4);
+        }
+        .back-home-btn:hover { transform: translateY(-2px); }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           LOADING OVERLAY
+        ═══════════════════════════════════════════════════════════════════ */
+        #loadingOverlay {
+            position: fixed; inset: 0; z-index: 999;
+            background: rgba(10,22,40,0.92); backdrop-filter: blur(12px);
+            display: none; flex-direction: column;
+            align-items: center; justify-content: center; color: var(--white);
+        }
+        #loadingOverlay.show { display: flex; }
+        .loading-spinner {
+            width: 56px; height: 56px; border: 4px solid rgba(255,255,255,0.15);
+            border-top-color: var(--gold); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loadingOverlay p { font-size: 1rem; font-weight: 500; color: var(--text-light); }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           TOAST
+        ═══════════════════════════════════════════════════════════════════ */
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--red); color: white; padding: 13px 24px;
+            border-radius: 50px; font-size: 0.88rem; font-weight: 500;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.3); z-index: 1000;
+            opacity: 0; transition: opacity 0.35s; pointer-events: none;
+            white-space: nowrap;
+        }
+        #toast.show { opacity: 1; }
+        #toast.success { background: var(--green); }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            .page-wrapper { padding: 20px 16px 50px; }
+            .form-card { padding: 24px 16px; }
+            .step-label { font-size: 0.65rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animated Background -->
+    <div class="mesh-bg"></div>
+    <div class="mesh-orb mesh-orb-1"></div>
+    <div class="mesh-orb mesh-orb-2"></div>
+    <div class="mesh-orb mesh-orb-3"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">Submitting your profile...</p>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"></div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  MAIN PAGE WRAPPER                                                  -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="page-wrapper">
+
+        <!-- Header -->
+        <header class="page-header">
+            <button class="header-back-btn" onclick="window.location.href='index.html'" title="Back to home">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="header-title-group">
+                <h1>Join the Elite</h1>
+                <p>Professional Network Registration</p>
+            </div>
+            <div class="header-logo">Skill<span>Hive</span></div>
+        </header>
+
+        <!-- ── Progress Stepper ──────────────────────────────────────────── -->
+        <div class="stepper-container">
+            <div class="stepper-track">
+                <div class="stepper-step active" id="stepIndicator1">
+                    <div class="step-circle" id="stepCircle1">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <span class="step-label">Location</span>
+                </div>
+                <div class="stepper-line" id="stepLine1"></div>
+                <div class="stepper-step" id="stepIndicator2">
+                    <div class="step-circle" id="stepCircle2">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <span class="step-label">Profile</span>
+                </div>
+                <div class="stepper-line" id="stepLine2"></div>
+                <div class="stepper-step" id="stepIndicator3">
+                    <div class="step-circle" id="stepCircle3">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                    <span class="step-label">Assets</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Form Card ─────────────────────────────────────────────────── -->
+        <div class="form-card">
+
+            <!-- ─────────────── STEP 1: LOCATION ─────────────── -->
+            <div class="step-panel active" id="panel1">
+                <div class="section-title">
+                    <h2>
+                        <span class="icon-badge"><i class="fa-solid fa-location-dot"></i></span>
+                        Location Verification
+                    </h2>
+                    <p>Verify your current location so clients can find you precisely. GPS verification is preferred.</p>
+                </div>
+
+                <!-- GPS Verify Button -->
+                <button class="location-verify-btn" id="verifyGpsBtn" onclick="verifyGPSLocation()">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                    Verify Current Location via GPS
+                </button>
+
+                <!-- GPS Result Card -->
+                <div class="location-result-card" id="locationResultCard">
+                    <div class="coords-row">
+                        <i class="fa-solid fa-satellite-dish coords-icon"></i>
+                        <div>
+                            <div class="coords-text" id="coordsDisplay">—</div>
+                            <div class="coords-sub">
+                                <i class="fa-solid fa-circle-check"></i> GPS Coordinates Captured
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider-or">OR SELECT MANUALLY</div>
+
+                <!-- City Dropdown -->
+                <div class="field-group">
+                    <label class="field-label" for="proCity">
+                        <i class="fa-solid fa-city"></i> Base City
+                    </label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-city field-icon"></i>
+                        <select id="proCity" onchange="loadAreas()">
+                            <option value="" disabled selected>Select your city</option>
+                            <option value="Samundri">Samundri</option>
+                            <option value="Faisalabad">Faisalabad</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Area Dropdown -->
+                <div class="field-group">
+                    <label class="field-label" for="proArea">
+                        <i class="fa-solid fa-map-location-dot"></i> Area / Neighbourhood
+                    </label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-map-location-dot field-icon"></i>
+                        <select id="proArea" disabled>
+                            <option value="" disabled selected>First select a city</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="nav-btns">
+                    <button class="btn-next" onclick="goToStep(2)">
+                        Next Step <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ─────────────── STEP 2: PROFILE ─────────────── -->
+            <div class="step-panel" id="panel2">
+                <div class="section-title">
+                    <h2>
+                        <span class="icon-badge"><i class="fa-solid fa-user-tie"></i></span>
+                        Professional Profile
+                    </h2>
+                    <p>Tell clients who you are and what you do. This information will be publicly visible.</p>
+                </div>
+
+                <!-- Full Name -->
+                <div class="field-group">
+                    <label class="field-label" for="proName">Full Name</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-user field-icon"></i>
+                        <input type="text" id="proName" placeholder="e.g. Muhammad Ali Khan" autocomplete="name">
+                    </div>
+                </div>
+
+                <!-- WhatsApp Number -->
+                <div class="field-group">
+                    <label class="field-label" for="proPhone">WhatsApp Number</label>
+                    <div class="phone-row">
+                        <div class="phone-prefix">
+                            <span class="flag">🇵🇰</span> +92
+                        </div>
+                        <div class="input-wrap">
+                            <i class="fa-brands fa-whatsapp field-icon"></i>
+                            <input type="tel" id="proPhone" placeholder="3XX XXXXXXX" maxlength="11">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Primary Profession -->
+                <div class="field-group">
+                    <label class="field-label" for="proSkill">Primary Profession</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-briefcase field-icon"></i>
+                        <select id="proSkill">
+                            <option value="" disabled selected>Select your profession</option>
+                            <option value="Plumber">🔧 Plumber</option>
+                            <option value="Electrician">⚡ Electrician</option>
+                            <option value="AC Technician">❄️ AC Technician</option>
+                            <option value="Tutor">📚 Tutor</option>
+                            <option value="Beautician">💄 Beautician</option>
+                            <option value="Carpenter">🔨 Carpenter</option>
+                            <option value="Auto Mechanic (Bike)">🏍️ Auto Mechanic (Bike)</option>
+                            <option value="Auto Mechanic (Car)">🚗 Auto Mechanic (Car)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Years of Experience -->
+                <div class="field-group">
+                    <label class="field-label" for="proExperience">Years of Experience</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-award field-icon"></i>
+                        <input type="number" id="proExperience" placeholder="e.g. 5" min="0" max="50">
+                    </div>
+                </div>
+
+                <div class="nav-btns">
+                    <button class="btn-back-step" onclick="goToStep(1, true)">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn-next" onclick="goToStep(3)">
+                        Next Step <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ─────────────── STEP 3: ASSETS ─────────────── -->
+            <div class="step-panel" id="panel3">
+                <div class="section-title">
+                    <h2>
+                        <span class="icon-badge"><i class="fa-solid fa-camera"></i></span>
+                        Biometric &amp; Portfolio
+                    </h2>
+                    <p>A verified selfie builds trust with clients. Portfolio images showcase your quality of work.</p>
+                </div>
+
+                <!-- Camera Trigger -->
+                <div class="camera-trigger-area" id="cameraTrigger" onclick="startCamera()">
+                    <div class="cam-icon"><i class="fa-solid fa-camera-retro"></i></div>
+                    <p id="camTriggerText">Tap to Open Live Camera</p>
+                    <small>Take a real-time verification selfie</small>
+                </div>
+
+                <!-- Live Camera Feed -->
+                <div id="cameraContainer">
+                    <video id="liveVideo" autoplay playsinline muted></video>
+                    <button class="capture-btn" onclick="captureSelfie()">
+                        <i class="fa-solid fa-circle-dot"></i> Snap Selfie
+                    </button>
+                </div>
+
+                <!-- Hidden Canvas (used for frame capture only) -->
+                <canvas id="photoCanvas" style="display:none;"></canvas>
+
+                <!-- Selfie Preview -->
+                <div id="selfiePreviewWrap" style="text-align:center; margin-bottom:16px;">
+                    <img id="selfiePreview" src="" alt="Your selfie">
+                    <span id="selfieLabel"><i class="fa-solid fa-circle-check"></i> Selfie Ready for Upload</span>
+                    <br>
+                    <button id="selfieRetakeBtn" onclick="retakeSelfie()">
+                        <i class="fa-solid fa-rotate-right"></i> Retake
+                    </button>
+                </div>
+
+                <!-- Portfolio Upload -->
+                <div class="field-group" style="margin-top:8px;">
+                    <label class="field-label">
+                        <i class="fa-solid fa-images"></i> Portfolio Gallery (Past Work)
+                    </label>
+                    <div class="portfolio-upload-area" id="portfolioDropArea"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event)">
+                        <input type="file" id="portfolioInput"
+                               multiple accept="image/*"
+                               onchange="handlePortfolioSelect(event)">
+                        <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                        <div class="upload-title">Upload Past Work Images</div>
+                        <div class="upload-sub">Drag &amp; drop or click to browse • Max 10 images</div>
+                    </div>
+                    <div id="portfolioGrid"></div>
+                    <div id="portfolioCount" style="text-align:center; display:none;">
+                        <span class="portfolio-count-badge">
+                            <i class="fa-solid fa-images"></i>
+                            <span id="portfolioCountText">0 images selected</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="nav-btns">
+                    <button class="btn-back-step" onclick="goToStep(2, true)">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn-submit" id="submitBtn" onclick="submitProProfile()">
+                        Submit Profile <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ─────────────── SUCCESS SCREEN ─────────────── -->
+            <div id="successScreen">
+                <div class="success-icon">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h2>Application Submitted!</h2>
+                <p>
+                    Your professional profile is under review. You'll be listed on the
+                    SkillHive radar once approved by our team.
+                </p>
+                <button class="back-home-btn" onclick="window.location.href='index.html'">
+                    <i class="fa-solid fa-house"></i> Back to Home
+                </button>
+            </div>
+
+        </div><!-- /form-card -->
+    </div><!-- /page-wrapper -->
+
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         INLINE SCRIPT — UI Logic, Camera, Supabase Storage Upload
+    ═══════════════════════════════════════════════════════════════════ -->
+    <!-- Supabase CDN + backend must load BEFORE the inline script below -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="backend.js"></script>
+
+    <script>
+        'use strict';
+
+        // ── Supabase Client ───────────────────────────────────────────────
+        // Use the client already initialized by backend.js (window._supabase).
+        // Do NOT re-call createClient here — backend.js handles initialization.
+        const _sb = window._supabase;
+
+        // ── State ────────────────────────────────────────────────────────
+        let currentStep      = 1;
+        let videoStream      = null;
+        let capturedCoords   = { lat: null, lng: null };
+        let selfieBlob       = null;   // Raw Blob from camera capture
+        let selfieObjectURL  = '';     // Local preview URL
+        let portfolioFiles   = [];     // Raw File objects for portfolio
+
+        // ── Toast Utility ────────────────────────────────────────────────
+        function showToast(msg, type = 'error') {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = `toast show${type === 'success' ? ' success' : ''}`;
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => el.classList.remove('show'), 3800);
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  STEPPER NAVIGATION
+        // ════════════════════════════════════════════════════════════════
+        function goToStep(targetStep, goingBack = false) {
+            if (!goingBack && !validateStep(currentStep)) return;
+            if (currentStep === 3) stopCameraStream();
+
+            document.getElementById(`panel${currentStep}`).classList.remove('active');
+            updateStepperUI(currentStep, targetStep);
+            currentStep = targetStep;
+
+            const targetPanel = document.getElementById(`panel${currentStep}`);
+            targetPanel.classList.remove('slide-back');
+            if (goingBack) targetPanel.classList.add('slide-back');
+            void targetPanel.offsetWidth; // Force reflow
+            targetPanel.classList.add('active');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateStepperUI(fromStep, toStep) {
+            for (let i = 1; i <= 3; i++) {
+                const indicator = document.getElementById(`stepIndicator${i}`);
+                const circle    = document.getElementById(`stepCircle${i}`);
+                indicator.classList.remove('active', 'done');
+
+                if (i < toStep) {
+                    indicator.classList.add('done');
+                    circle.innerHTML = '<i class="fa-solid fa-check"></i>';
+                } else if (i === toStep) {
+                    indicator.classList.add('active');
+                    const icons = ['fa-location-dot', 'fa-user-tie', 'fa-camera'];
+                    circle.innerHTML = `<i class="fa-solid ${icons[i-1]}"></i>`;
+                } else {
+                    const icons = ['fa-location-dot', 'fa-user-tie', 'fa-camera'];
+                    circle.innerHTML = `<i class="fa-solid ${icons[i-1]}"></i>`;
+                }
+            }
+            for (let i = 1; i <= 2; i++) {
+                const line = document.getElementById(`stepLine${i}`);
+                if (line) line.classList.toggle('done', toStep > i);
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  STEP VALIDATION
+        // ════════════════════════════════════════════════════════════════
+        function validateStep(step) {
+            if (step === 1) {
+                const city   = document.getElementById('proCity').value;
+                const area   = document.getElementById('proArea').value;
+                const hasGPS = capturedCoords.lat !== null;
+                if (!hasGPS && (!city || !area)) {
+                    showToast('Please verify GPS location or select City & Area manually.');
+                    return false;
+                }
+                return true;
+            }
+            if (step === 2) {
+                const name  = document.getElementById('proName').value.trim();
+                const phone = document.getElementById('proPhone').value.trim();
+                const skill = document.getElementById('proSkill').value;
+                const exp   = document.getElementById('proExperience').value;
+                if (!name)  { showToast('Please enter your full name.'); return false; }
+                if (!phone || phone.length < 10) { showToast('Please enter a valid WhatsApp number.'); return false; }
+                if (!skill) { showToast('Please select your primary profession.'); return false; }
+                if (exp === '' || exp === null) { showToast('Please enter your years of experience.'); return false; }
+                return true;
+            }
+            return true;
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  STEP 1 — GPS LOCATION
+        // ════════════════════════════════════════════════════════════════
+        async function verifyGPSLocation() {
+            if (!navigator.geolocation) {
+                showToast('Geolocation is not supported by this browser.');
+                return;
+            }
+            const btn = document.getElementById('verifyGpsBtn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locating...';
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    capturedCoords.lat = position.coords.latitude;
+                    capturedCoords.lng = position.coords.longitude;
+
+                    const display = `${capturedCoords.lat.toFixed(6)}°N, ${capturedCoords.lng.toFixed(6)}°E`;
+                    document.getElementById('coordsDisplay').textContent = display;
+
+                    document.getElementById('locationResultCard').classList.add('show');
+
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Location Verified';
+                    btn.style.borderColor = 'var(--green)';
+                    btn.style.color = 'var(--green)';
+                    btn.disabled = false;
+
+                    showToast('GPS location captured successfully!', 'success');
+                },
+                (error) => {
+                    const messages = {
+                        1: 'Location permission denied. Please use the manual dropdowns.',
+                        2: 'Location unavailable. Please use the manual dropdowns.',
+                        3: 'Location request timed out. Please try again.'
+                    };
+                    showToast(messages[error.code] || 'Failed to get location.');
+                    btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Verify Current Location via GPS';
+                    btn.disabled = false;
+                },
+                { timeout: 12000, enableHighAccuracy: true, maximumAge: 0 }
+            );
+        }
+
+        const areasData = {
+            'Samundri': [
+                { id: 'gojra-road',     name: 'Gojra Road' },
+                { id: 'katchery-bazar', name: 'Katchery Bazar' },
+                { id: 'rajbah-road',    name: 'Rajbah Road' }
+            ],
+            'Faisalabad': [
+                { id: 'd-ground',  name: 'D-Ground' },
+                { id: 'kohinoor', name: 'Kohinoor City' }
+            ]
+        };
+
+        function loadAreas() {
+            const city = document.getElementById('proCity').value;
+            const areaSelect = document.getElementById('proArea');
+            areaSelect.innerHTML = '<option value="" disabled selected>Select your area</option>';
+            if (city && areasData[city]) {
+                areaSelect.disabled = false;
+                areasData[city].forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id; opt.text = a.name;
+                    areaSelect.appendChild(opt);
+                });
+            } else {
+                areaSelect.disabled = true;
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  STEP 3 — WEBRTC CAMERA (captures raw Blob — no compression)
+        // ════════════════════════════════════════════════════════════════
+        async function startCamera() {
+            if (selfieBlob) { retakeSelfie(); return; }
+
+            document.getElementById('cameraTrigger').style.display = 'none';
+            document.getElementById('cameraContainer').style.display = 'block';
+
+            const video = document.getElementById('liveVideo');
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+                video.srcObject = videoStream;
+            } catch (err) {
+                console.error('[Camera] Access error:', err);
+                showToast('Camera access denied or unavailable. Check browser permissions.');
+                document.getElementById('cameraTrigger').style.display = 'block';
+                document.getElementById('cameraContainer').style.display = 'none';
+            }
+        }
+
+        async function captureSelfie() {
+            const video = document.getElementById('liveVideo');
+            if (!video.videoWidth || !video.videoHeight) {
+                showToast('Camera not ready yet. Please wait a moment.');
+                return;
+            }
+
+            try {
+                // Draw frame to canvas → get raw Blob (no compression)
+                const canvas = document.getElementById('photoCanvas');
+                canvas.width  = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+
+                selfieBlob = await new Promise(resolve =>
+                    canvas.toBlob(resolve, 'image/jpeg', 0.92)
+                );
+
+                // Free canvas memory
+                canvas.width = 1; canvas.height = 1;
+
+                // Stop camera stream immediately
+                stopCameraStream();
+
+                // Create preview URL
+                selfieObjectURL = URL.createObjectURL(selfieBlob);
+                document.getElementById('selfiePreview').src = selfieObjectURL;
+                document.getElementById('selfiePreviewWrap').style.display = 'block';
+                document.getElementById('cameraContainer').style.display = 'none';
+                document.getElementById('cameraTrigger').style.display = 'none';
+
+                showToast('Selfie captured! Ready to upload.', 'success');
+            } catch (err) {
+                console.error('[Selfie] Capture error:', err);
+                showToast('Failed to capture selfie. Please try again.');
+            }
+        }
+
+        function retakeSelfie() {
+            if (selfieObjectURL) {
+                URL.revokeObjectURL(selfieObjectURL);
+                selfieObjectURL = '';
+            }
+            selfieBlob = null;
+            document.getElementById('selfiePreviewWrap').style.display = 'none';
+            document.getElementById('selfiePreview').src = '';
+            document.getElementById('cameraTrigger').style.display = 'block';
+            document.getElementById('cameraTrigger').innerHTML = `
+                <div class="cam-icon"><i class="fa-solid fa-camera-retro"></i></div>
+                <p id="camTriggerText">Tap to Retake Selfie</p>
+                <small>Previous selfie discarded</small>
+            `;
+        }
+
+        function stopCameraStream() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            const video = document.getElementById('liveVideo');
+            if (video) video.srcObject = null;
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  PORTFOLIO IMAGES — Store raw File objects (uploaded to Storage)
+        // ════════════════════════════════════════════════════════════════
+        async function handlePortfolioSelect(event) {
+            addPortfolioFiles(Array.from(event.target.files));
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            document.getElementById('portfolioDropArea').classList.add('drag-over');
+        }
+        function handleDragLeave(event) {
+            document.getElementById('portfolioDropArea').classList.remove('drag-over');
+        }
+        function handleDrop(event) {
+            event.preventDefault();
+            document.getElementById('portfolioDropArea').classList.remove('drag-over');
+            const files = Array.from(event.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            addPortfolioFiles(files);
+        }
+
+        function addPortfolioFiles(files) {
+            if (files.length === 0) return;
+            const remaining = 10 - portfolioFiles.length;
+            const toAdd = files.slice(0, remaining);
+            if (toAdd.length < files.length) {
+                showToast(`Portfolio capped at 10 images. Adding first ${toAdd.length}.`);
+            }
+            toAdd.forEach(file => {
+                portfolioFiles.push(file);
+                renderPortfolioThumb(file, portfolioFiles.length - 1);
+            });
+            updatePortfolioCount();
+        }
+
+        function renderPortfolioThumb(file, index) {
+            const url  = URL.createObjectURL(file);
+            const grid = document.getElementById('portfolioGrid');
+            const wrap = document.createElement('div');
+            wrap.className = 'portfolio-thumb';
+            wrap.id = `thumb${index}`;
+            wrap.innerHTML = `
+                <img src="${url}" alt="Portfolio image ${index + 1}">
+                <button class="thumb-remove" onclick="removePortfolioImage(${index})">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+            grid.appendChild(wrap);
+        }
+
+        function removePortfolioImage(index) {
+            portfolioFiles[index] = null;
+            const thumb = document.getElementById(`thumb${index}`);
+            if (thumb) {
+                thumb.style.transform  = 'scale(0)';
+                thumb.style.transition = 'transform 0.25s ease';
+                setTimeout(() => thumb.remove(), 250);
+            }
+            portfolioFiles = portfolioFiles.filter(f => f !== null);
+            document.getElementById('portfolioGrid').innerHTML = '';
+            portfolioFiles.forEach((f, i) => renderPortfolioThumb(f, i));
+            updatePortfolioCount();
+        }
+
+        function updatePortfolioCount() {
+            const count  = portfolioFiles.length;
+            const countEl = document.getElementById('portfolioCount');
+            const textEl  = document.getElementById('portfolioCountText');
+            if (count > 0) {
+                countEl.style.display = 'block';
+                textEl.textContent = `${count} image${count > 1 ? 's' : ''} ready to upload`;
+            } else {
+                countEl.style.display = 'none';
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  MEMORY-SAFE CLEANUP
+        // ════════════════════════════════════════════════════════════════
+        window.addEventListener('beforeunload', () => stopCameraStream());
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stopCameraStream();
+        });
+
+        // ════════════════════════════════════════════════════════════════
+        //  SUPABASE STORAGE HELPER
+        //  Uploads a single Blob/File to the skillhive-media bucket.
+        //  Returns the public URL string.
+        // ════════════════════════════════════════════════════════════════
+        async function uploadToStorage(blob, path) {
+            const { data, error } = await _sb.storage
+                .from('skillhive-media')
+                .upload(path, blob, {
+                    cacheControl: '3600',
+                    upsert: false,
+                    contentType: blob.type || 'image/jpeg'
+                });
+
+            if (error) throw error;
+
+            const { data: urlData } = _sb.storage
+                .from('skillhive-media')
+                .getPublicUrl(data.path);
+
+            return urlData.publicUrl;
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  FINAL SUBMIT — Supabase Storage + DB Pipeline
+        // ════════════════════════════════════════════════════════════════
+        window.submitProProfile = async function() {
+            if (!selfieBlob) {
+                showToast('Please take a selfie before submitting!');
+                return;
+            }
+
+            const name  = document.getElementById('proName').value.trim();
+            const phone = document.getElementById('proPhone').value.trim();
+            const skill = document.getElementById('proSkill').value;
+            const exp   = parseInt(document.getElementById('proExperience').value, 10);
+            const city  = document.getElementById('proCity').value;
+            const area  = document.getElementById('proArea').value;
+
+            if (!name || !phone || !skill || isNaN(exp)) {
+                showToast('Please complete all profile fields in Step 2.');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingText    = document.getElementById('loadingText');
+            loadingOverlay.classList.add('show');
+            loadingText.textContent = 'Uploading selfie to secure storage...';
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+
+            try {
+                // ── 1. Upload selfie to Supabase Storage ─────────────
+                const selfieExt  = 'jpg';
+                const selfiePath = `selfies/${Date.now()}_${Math.random().toString(36).slice(2)}.${selfieExt}`;
+                const selfieUrl  = await uploadToStorage(selfieBlob, selfiePath);
+                console.log('[SkillHive] Selfie uploaded:', selfieUrl);
+
+                // ── 2. Upload portfolio images ────────────────────────
+                loadingText.textContent = `Uploading portfolio images...`;
+                const portfolioUrls = [];
+                for (const [i, file] of portfolioFiles.entries()) {
+                    const ext  = file.name.split('.').pop() || 'jpg';
+                    const path = `portfolio/${Date.now()}_${i}_${Math.random().toString(36).slice(2)}.${ext}`;
+                    const url  = await uploadToStorage(file, path);
+                    portfolioUrls.push(url);
+                    console.log(`[SkillHive] Portfolio image ${i + 1} uploaded:`, url);
+                }
+
+                // ── 3. Insert record into professionals table ─────────
+                loadingText.textContent = 'Saving your profile to database...';
+
+                const record = {
+                    name:           name,
+                    phone:          `+92${phone}`,
+                    skill:          skill,
+                    city:           city  || '',
+                    area:           area  || '',
+                    experience:     isNaN(exp) ? 0 : exp,
+                    lat:            capturedCoords.lat,
+                    lng:            capturedCoords.lng,
+                    selfie_url:     selfieUrl,
+                    portfolio_urls: portfolioUrls,   // array of public Storage URLs
+                    status:         'Pending'
+                };
+
+                const { data: inserted, error: dbError } = await _sb
+                    .from('professionals')
+                    .insert([record])
+                    .select();
+
+                if (dbError) throw dbError;
+                console.log('[SkillHive] Professional inserted:', inserted);
+
+                // ── 4. Show success screen ────────────────────────────
+                stopCameraStream();
+                loadingOverlay.classList.remove('show');
+
+                document.getElementById('panel3').classList.remove('active');
+                document.getElementById('successScreen').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (error) {
+                console.error('[SkillHive] Submission error:', error);
+                loadingOverlay.classList.remove('show');
+                submitBtn.disabled = false;
+                showToast(`Submission failed: ${error.message || 'Please try again.'}`);
+            }
+        };
+    </script>
+
+</body>
+</html>

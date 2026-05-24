@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillHive | Find Local Professionals</title>
+    <meta property="og:title" content="SkillHive | Pakistan's Trusted Professional Network" />
+    <meta property="og:description" content="Find and book verified local experts, electricians, and technicians instantly in your city." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=1200&auto=format&fit=crop" />
+    <meta name="description" content="Search and connect with verified plumbers, electricians, and AC technicians in your city on SkillHive.">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        corePlugins: {
+          preflight: false,
+        }
+      }
+    </script>
+
+    <!-- Leaflet MarkerCluster -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+    <style>
+        /* ═══════════════════════════════════════════════════════════════════
+           DESIGN SYSTEM
+        ═══════════════════════════════════════════════════════════════════ */
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+
+        :root {
+            --navy:        #0d1f3c;
+            --navy-mid:    #1a3a5c;
+            --navy-light:  #2a5298;
+            --gold:        #f5a623;
+            --gold-dark:   #d4891a;
+            --gold-glow:   rgba(245,166,35,0.22);
+            --white:       #ffffff;
+            --surface:     #f0f4f8;
+            --surface-2:   #e8eef5;
+            --border:      #dde5ef;
+            --text-dark:   #0f172a;
+            --text-mid:    #475569;
+            --text-light:  #94a3b8;
+            --green:       #22c55e;
+            --green-soft:  #dcfce7;
+            --red:         #ef4444;
+            --shadow-sm:   0 2px 8px rgba(0,0,0,0.06);
+            --shadow-md:   0 8px 24px rgba(0,0,0,0.09);
+            --shadow-lg:   0 20px 50px rgba(0,0,0,0.13);
+            --shadow-float:0 15px 35px rgba(0,0,0,0.10), 0 5px 15px rgba(0,0,0,0.06);
+            --radius-xl:   24px;
+            --radius-lg:   14px;
+            --radius-md:   10px;
+            --radius-sm:   6px;
+            --navbar-h:    64px;
+            --sidebar-w:   410px;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: var(--surface);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           TOP NAVIGATION BAR
+        ═══════════════════════════════════════════════════════════════════ */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; height: var(--navbar-h);
+            background: rgba(255,255,255,0.94);
+            backdrop-filter: blur(24px) saturate(200%);
+            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            border-bottom: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 1px 20px rgba(13,31,60,0.07);
+            z-index: 100;
+            display: flex; align-items: center;
+            padding: 0 22px; gap: 0;
+        }
+
+        .navbar-logo {
+            font-size: 1.45rem; font-weight: 800; color: var(--navy-mid);
+            letter-spacing: -0.8px; text-decoration: none;
+            display: flex; align-items: center; gap: 3px; flex: 0 0 auto;
+        }
+        .navbar-logo .highlight { color: var(--gold); }
+
+        .navbar-location {
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+            color: var(--text-mid); font-size: 0.88rem; font-weight: 500;
+        }
+        .navbar-location .pin-dot {
+            width: 7px; height: 7px; border-radius: 50%; background: var(--gold);
+            flex-shrink: 0; animation: pingDot 2s ease-in-out infinite;
+        }
+        @keyframes pingDot {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:0.6; transform:scale(1.35); }
+        }
+        .location-text { font-weight: 700; color: var(--navy-mid); }
+
+        .navbar-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+
+        .back-home-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--navy-mid); color: white;
+            border: none; border-radius: var(--radius-md);
+            padding: 8px 15px; font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .back-home-btn:hover { background: var(--navy-light); transform: translateY(-1px); }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           SPLIT SCREEN LAYOUT — Scroll-Lock Architecture
+        ═══════════════════════════════════════════════════════════════════ */
+        .app-body {
+            display: flex;
+            height: 100vh;
+            padding-top: var(--navbar-h);
+        }
+
+        /* ── LEFT PANEL — Independently Scrollable ──────────────────────── */
+        .left-panel {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            height: calc(100vh - var(--navbar-h));
+            overflow-y: auto;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom scrollbar */
+        .left-panel::-webkit-scrollbar { width: 4px; }
+        .left-panel::-webkit-scrollbar-track { background: transparent; }
+        .left-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .left-panel::-webkit-scrollbar-thumb:hover { background: #c1cdd8; }
+
+        /* ── RIGHT PANEL — Completely Fixed / Sticky Map ─────────────────── */
+        .right-panel {
+            flex: 1;
+            position: sticky;
+            top: var(--navbar-h);
+            height: calc(100vh - var(--navbar-h));
+            overflow: hidden;
+            padding: 18px 20px 18px 14px;
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Search Controls (sticky within left panel) ───────────────────── */
+        .search-controls {
+            padding: 18px 16px 16px;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 10;
+            box-shadow: 0 2px 12px rgba(13,31,60,0.05);
+            flex-shrink: 0;
+        }
+
+        .search-controls h2 {
+            font-size: 1.05rem; font-weight: 800; color: var(--text-dark);
+            margin-bottom: 12px; letter-spacing: -0.4px;
+        }
+
+        .filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
+
+        .filter-select {
+            flex: 1; padding: 9px 28px 9px 12px;
+            border: 1.5px solid var(--border); border-radius: var(--radius-md);
+            background: var(--surface); color: var(--text-dark);
+            font-size: 0.82rem; font-weight: 500; outline: none;
+            appearance: none; cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 8px center; background-size: 16px;
+        }
+        .filter-select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,166,35,0.12); background-color: var(--white); }
+
+        .search-btn {
+            padding: 9px 16px; border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+            color: white; border: none; font-size: 0.82rem; font-weight: 700;
+            cursor: pointer; white-space: nowrap; display: flex; align-items: center;
+            gap: 6px; transition: all 0.22s;
+            box-shadow: 0 3px 10px rgba(26,58,92,0.3);
+        }
+        .search-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(26,58,92,0.42); }
+        .search-btn:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
+
+        /* ── LOCATE ME BUTTON — GPS ─────────────────────────────────────── */
+        .locate-me-btn {
+            width: 100%; padding: 10px 14px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, rgba(245,166,35,0.10), rgba(245,166,35,0.04));
+            border: 1.5px solid rgba(245,166,35,0.45);
+            color: #b8760a;
+            font-size: 0.82rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 8px; transition: all 0.25s; position: relative; overflow: hidden;
+            letter-spacing: 0.1px;
+        }
+        .locate-me-btn::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at center, rgba(245,166,35,0.18) 0%, transparent 70%);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .locate-me-btn:hover {
+            border-color: var(--gold); color: var(--gold-dark);
+            box-shadow: 0 0 0 3px rgba(245,166,35,0.12), 0 4px 14px rgba(245,166,35,0.2);
+            transform: translateY(-1px);
+        }
+        .locate-me-btn:hover::before { opacity: 1; }
+        .locate-me-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        .locate-me-btn .gps-pulse {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--gold); flex-shrink: 0;
+            box-shadow: 0 0 0 2px rgba(245,166,35,0.3);
+            animation: gpsPulse 1.8s ease-in-out infinite;
+        }
+        @keyframes gpsPulse {
+            0%,100% { box-shadow: 0 0 0 2px rgba(245,166,35,0.3); transform: scale(1); }
+            50%      { box-shadow: 0 0 0 5px rgba(245,166,35,0); transform: scale(1.15); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           SMART INSIGHTS RIBBON
+        ═══════════════════════════════════════════════════════════════════ */
+        .insights-ribbon {
+            margin: 10px 10px 0;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, #0d1f3c 0%, #112240 100%);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(245,166,35,0.25);
+            box-shadow: 0 0 0 1px rgba(245,166,35,0.08), 0 4px 14px rgba(0,0,0,0.12);
+            display: flex;
+            gap: 6px;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .insights-ribbon::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245,166,35,0.6), transparent);
+        }
+        .insights-chip {
+            display: flex; align-items: center; gap: 5px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 0.7rem; font-weight: 600;
+            color: rgba(255,255,255,0.85);
+            white-space: nowrap;
+            flex-shrink: 0;
+            animation: chipFadeIn 0.5s ease both;
+        }
+        .insights-chip:nth-child(1) { animation-delay: 0.05s; }
+        .insights-chip:nth-child(2) { animation-delay: 0.15s; }
+        .insights-chip:nth-child(3) { animation-delay: 0.25s; }
+        @keyframes chipFadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .insights-chip .chip-dot {
+            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+            animation: chipGlow 2s ease-in-out infinite;
+        }
+        @keyframes chipGlow {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.6; transform: scale(1.3); }
+        }
+        .chip-dot.green  { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.6); }
+        .chip-dot.gold   { background: #f5a623; box-shadow: 0 0 6px rgba(245,166,35,0.6); }
+        .chip-dot.blue   { background: #60a5fa; box-shadow: 0 0 6px rgba(96,165,250,0.6); }
+
+        /* ── Results Header ─────────────────────────────────────────────── */
+        .results-header {
+            padding: 10px 16px 4px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .results-header .count-label {
+            font-size: 0.78rem; font-weight: 600; color: var(--text-light);
+            text-transform: uppercase; letter-spacing: 0.8px;
+        }
+        .results-header .sort-label {
+            font-size: 0.75rem; color: var(--text-light);
+        }
+
+        /* ── Pro Card ──────────────────────────────────────────────────── */
+        .pro-list { padding: 8px 10px 12px; }
+
+        .pro-card {
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.28s cubic-bezier(0.34,1.2,0.64,1);
+            display: flex; gap: 12px; align-items: flex-start;
+            position: relative; overflow: hidden;
+        }
+        .pro-card::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 3px; background: linear-gradient(180deg,var(--gold),var(--gold-dark));
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .pro-card:hover {
+            border-color: rgba(245,166,35,0.55);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px) scale(1.005);
+        }
+        .pro-card:hover::before { opacity: 1; }
+        .pro-card.highlighted {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(245,166,35,0.18), var(--shadow-md);
+            transform: translateY(-3px) scale(1.008);
+        }
+        .pro-card.highlighted::before { opacity: 1; }
+
+        /* Card avatar */
+        .card-avatar {
+            width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0;
+            border: 2.5px solid var(--gold); overflow: hidden;
+            background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: 700; color: white;
+            box-shadow: 0 2px 8px rgba(245,166,35,0.2);
+        }
+        .card-avatar img { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+        /* Card body */
+        .card-body { flex: 1; min-width: 0; }
+        .card-name {
+            font-size: 0.93rem; font-weight: 700; color: var(--text-dark);
+            margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .card-skill-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
+        .skill-chip {
+            background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+            color: white; font-size: 0.68rem; font-weight: 600;
+            padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+        }
+        .exp-chip { color: var(--text-light); font-size: 0.72rem; font-weight: 500; }
+        .card-stars { display: flex; align-items: center; gap: 2px; margin-bottom: 4px; }
+        .card-stars .rating-text { font-size: 0.72rem; color: var(--text-mid); font-weight: 600; margin-left: 3px; }
+        .card-location { font-size: 0.72rem; color: var(--text-light); display: flex; align-items: center; gap: 4px; margin-bottom: 5px; }
+
+        /* Trust badges row */
+        .trust-badge-row {
+            display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 4px;
+        }
+        .badge-verified {
+            display: inline-flex; align-items: center; gap: 3px;
+            background: #dcfce7; color: #16a34a;
+            border: 1px solid #bbf7d0;
+            font-size: 0.63rem; font-weight: 700;
+            padding: 2px 7px; border-radius: 20px;
+            white-space: nowrap;
+        }
+        .badge-rating {
+            display: inline-flex; align-items: center; gap: 3px;
+            background: #fef3c7; color: #92400e;
+            border: 1px solid #fde68a;
+            font-size: 0.63rem; font-weight: 700;
+            padding: 2px 7px; border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        /* Distance badge */
+        .distance-badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            background: rgba(26,58,92,0.07); color: var(--navy-mid);
+            border: 1px solid rgba(26,58,92,0.15);
+            font-size: 0.63rem; font-weight: 700;
+            padding: 2px 7px; border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        /* Card action */
+        .card-action { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+        .card-book-btn {
+            background: linear-gradient(135deg, #25D366, #1da851);
+            color: white; border: none; border-radius: var(--radius-sm);
+            padding: 7px 11px; font-size: 0.72rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; gap: 4px;
+            transition: all 0.2s; white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(37,211,102,0.3);
+        }
+        .card-book-btn:hover { transform: scale(1.06); box-shadow: 0 5px 14px rgba(37,211,102,0.45); }
+        .verified-tag { display: flex; align-items: center; gap: 3px; color: var(--green); font-size: 0.65rem; font-weight: 600; }
+
+        /* ── Premium Skeleton Loading ───────────────────────────────────── */
+        .skeleton-list { padding: 8px 10px; flex-shrink: 0; }
+        .skeleton-card {
+            background: var(--white); border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg); padding: 14px; margin-bottom: 10px; display: flex; gap: 12px;
+            overflow: hidden; position: relative;
+        }
+        .skeleton-card::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%);
+            animation: shimmerPass 1.6s ease-in-out infinite;
+        }
+        @keyframes shimmerPass {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .skel {
+            background: linear-gradient(90deg, #edf2f7 0%, #dde5ef 50%, #edf2f7 100%);
+            background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; border-radius: 4px;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skel-circle { width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0; }
+        .skel-lines  { flex: 1; display: flex; flex-direction: column; gap: 7px; padding-top: 4px; }
+        .skel-line   { height: 10px; }
+        .skel-line.w80 { width: 80%; } .skel-line.w60 { width: 60%; } .skel-line.w40 { width: 40%; }
+
+        /* ── PREMIUM EMPTY STATE ──────────────────────────────────────────── */
+        .premium-empty {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; padding: 36px 20px 20px;
+        }
+        .premium-empty .radar-wrap {
+            position: relative; width: 100px; height: 100px; margin-bottom: 24px;
+        }
+        .premium-empty .radar-ring {
+            position: absolute; border-radius: 50%;
+            border: 2px solid rgba(26,58,92,0.12);
+            animation: emptyRadar 2.2s ease-out infinite;
+        }
+        .premium-empty .radar-ring:nth-child(1) { inset: 0; animation-delay: 0s; }
+        .premium-empty .radar-ring:nth-child(2) { inset: 15px; animation-delay: 0.55s; }
+        .premium-empty .radar-ring:nth-child(3) { inset: 30px; animation-delay: 1.1s; border-color: rgba(245,166,35,0.25); }
+        @keyframes emptyRadar {
+            0%   { opacity: 0; transform: scale(0.7); }
+            40%  { opacity: 1; }
+            100% { opacity: 0; transform: scale(1.3); }
+        }
+        .premium-empty .radar-core {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        }
+        .premium-empty .radar-icon-inner {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; color: white;
+            box-shadow: 0 4px 14px rgba(26,58,92,0.3), 0 0 0 4px rgba(26,58,92,0.08);
+        }
+        .premium-empty h3 {
+            font-size: 1rem; font-weight: 800; color: var(--text-dark);
+            margin-bottom: 8px; letter-spacing: -0.3px; line-height: 1.3;
+        }
+        .premium-empty p {
+            font-size: 0.82rem; color: var(--text-mid); line-height: 1.65; max-width: 280px;
+        }
+        .premium-empty .empty-action-btn {
+            margin-top: 18px;
+            background: linear-gradient(135deg, var(--navy-mid), var(--navy-light));
+            color: white; border: none; border-radius: var(--radius-md);
+            padding: 10px 20px; font-size: 0.82rem; font-weight: 700;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+            transition: all 0.22s; box-shadow: 0 4px 12px rgba(26,58,92,0.3);
+        }
+        .premium-empty .empty-action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(26,58,92,0.4); }
+
+        /* Initial discover state */
+        .discover-state {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; padding: 32px 20px 16px;
+        }
+        .discover-state .ds-icon {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(26,58,92,0.08), rgba(42,82,152,0.10));
+            border: 2px solid rgba(26,58,92,0.10);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; color: var(--navy-mid); margin-bottom: 16px;
+        }
+        .discover-state h3 { font-size: 0.97rem; color: var(--text-dark); margin-bottom: 6px; font-weight: 700; }
+        .discover-state p  { font-size: 0.81rem; color: var(--text-light); line-height: 1.6; max-width: 260px; }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           SKILLHIVE PROMISE — Trust Section
+        ═══════════════════════════════════════════════════════════════════ */
+        .trust-section {
+            margin: 0 10px 4px;
+            padding: 20px 18px 18px;
+            background: linear-gradient(135deg, var(--navy) 0%, #13294a 100%);
+            border-radius: var(--radius-lg);
+            position: relative; overflow: hidden;
+            flex-shrink: 0;
+        }
+        .trust-section::before {
+            content: '';
+            position: absolute; top: -30px; right: -30px;
+            width: 120px; height: 120px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(245,166,35,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .trust-section::after {
+            content: '';
+            position: absolute; bottom: -20px; left: 20px;
+            width: 80px; height: 80px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(42,82,152,0.3) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .trust-section-inner { position: relative; z-index: 1; }
+
+        .trust-eyebrow {
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 1.8px;
+            color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .trust-eyebrow::before {
+            content: ''; width: 20px; height: 1.5px; background: var(--gold);
+            opacity: 0.6; flex-shrink: 0;
+        }
+
+        .trust-headline {
+            font-size: 1rem; font-weight: 800; color: var(--white);
+            letter-spacing: -0.4px; line-height: 1.3; margin-bottom: 16px;
+        }
+        .trust-headline span { color: var(--gold); }
+
+        .trust-badges { display: flex; flex-direction: column; gap: 10px; }
+
+        .trust-badge-item { display: flex; align-items: center; gap: 11px; }
+        .trust-badge-icon {
+            width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+        }
+        .trust-badge-icon.shield { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .trust-badge-icon.bolt   { background: rgba(245,166,35,0.15); color: var(--gold); }
+        .trust-badge-icon.lock   { background: rgba(59,130,246,0.15); color: #60a5fa; }
+
+        .trust-badge-text strong {
+            display: block; font-size: 0.82rem; font-weight: 700;
+            color: var(--white); letter-spacing: -0.1px;
+        }
+        .trust-badge-text small {
+            font-size: 0.69rem; color: rgba(255,255,255,0.45); font-weight: 400;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           ELITE MEGA FOOTER — Dark Mode, Premium
+        ═══════════════════════════════════════════════════════════════════ */
+        .mega-footer {
+            background: linear-gradient(160deg, #080e1a 0%, #0d1c33 100%);
+            border-top: 1px solid rgba(245,166,35,0.15);
+            padding: 24px 18px 18px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .mega-footer::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245,166,35,0.5), transparent);
+        }
+
+        /* Brand block */
+        .mf-brand { margin-bottom: 18px; }
+        .mf-logo {
+            font-size: 1.2rem; font-weight: 800; color: #fff;
+            letter-spacing: -0.6px; margin-bottom: 4px;
+        }
+        .mf-logo span { color: var(--gold); }
+        .mf-tagline {
+            font-size: 0.72rem; color: rgba(255,255,255,0.4); font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Sections grid */
+        .mf-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 16px; margin-bottom: 18px;
+        }
+
+        .mf-section-title {
+            font-size: 0.65rem; font-weight: 700; color: var(--gold);
+            text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;
+        }
+
+        /* Contact info */
+        .mf-contact-item {
+            display: flex; align-items: center; gap: 7px;
+            color: rgba(255,255,255,0.65); font-size: 0.72rem; font-weight: 500;
+            margin-bottom: 6px; text-decoration: none;
+            transition: color 0.2s;
+        }
+        .mf-contact-item:hover { color: var(--gold); }
+        .mf-contact-item i { font-size: 0.72rem; color: var(--gold); width: 14px; }
+
+        /* App store buttons */
+        .mf-store-btns { display: flex; flex-direction: column; gap: 7px; }
+        .mf-store-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: var(--radius-sm); padding: 7px 10px;
+            color: white; font-size: 0.68rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; text-decoration: none;
+        }
+        .mf-store-btn:hover {
+            background: rgba(245,166,35,0.12);
+            border-color: rgba(245,166,35,0.3);
+            color: var(--gold);
+        }
+        .mf-store-btn i { font-size: 1rem; }
+        .mf-store-btn .btn-sub { font-size: 0.58rem; font-weight: 400; color: rgba(255,255,255,0.45); display: block; }
+
+        /* Footer bottom bar */
+        .mf-bottom {
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 14px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 8px;
+        }
+        .mf-copy {
+            font-size: 0.67rem; color: rgba(255,255,255,0.3); font-weight: 400;
+        }
+        .mf-links { display: flex; gap: 12px; align-items: center; }
+        .mf-link {
+            font-size: 0.67rem; color: rgba(255,255,255,0.35); text-decoration: none;
+            font-weight: 500; transition: color 0.2s;
+        }
+        .mf-link:hover { color: var(--gold); }
+
+        /* Socials row */
+        .mf-socials {
+            display: flex; gap: 7px; margin-bottom: 14px;
+        }
+        .mf-social-icon {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.45); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.72rem; transition: all 0.2s; text-decoration: none;
+        }
+        .mf-social-icon:hover { background: var(--gold); color: var(--navy); border-color: var(--gold); transform: translateY(-2px); }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           RIGHT PANEL — FLOATING MAP (Sticky / Fixed)
+        ═══════════════════════════════════════════════════════════════════ */
+        .map-float-card {
+            flex: 1;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-float);
+            border: 1.5px solid rgba(255,255,255,0.8);
+            position: relative;
+            outline: 1px solid rgba(221,229,239,0.6);
+            outline-offset: -1px;
+            transition: box-shadow 0.3s;
+        }
+        .map-float-card:hover {
+            box-shadow: 0 22px 48px rgba(0,0,0,0.13), 0 8px 20px rgba(0,0,0,0.07);
+        }
+
+        #searchMap { width: 100%; height: 100%; }
+
+        /* Map legend */
+        .map-legend {
+            position: absolute; top: 16px; right: 16px; z-index: 10;
+            background: rgba(255,255,255,0.96); backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 50px;
+            padding: 8px 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.09);
+            display: flex; gap: 12px; align-items: center;
+        }
+        .legend-item {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 0.71rem; font-weight: 600; color: var(--text-mid);
+        }
+        .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+        .legend-dot.pro  { background: var(--navy-mid); border: 2px solid var(--gold); }
+        .legend-dot.user { background: #ef4444; border: 2px solid white; box-shadow: 0 0 0 1px #ef4444; }
+
+        /* Leaflet zoom controls */
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1) !important;
+            border-radius: 12px !important; overflow: hidden;
+        }
+        .leaflet-control-zoom a {
+            background: white !important; color: var(--navy-mid) !important;
+            font-size: 1.1rem !important; line-height: 28px !important;
+            width: 32px !important; height: 32px !important;
+            border: none !important; border-bottom: 1px solid #eee !important; font-weight: 700 !important;
+        }
+        .leaflet-control-zoom a:hover { background: var(--navy-mid) !important; color: white !important; }
+        .leaflet-control-zoom-out { border-bottom: none !important; }
+
+        /* MarkerCluster custom styling */
+        .marker-cluster-small,
+        .marker-cluster-medium,
+        .marker-cluster-large {
+            background-clip: padding-box;
+        }
+        .marker-cluster-small  { background-color: rgba(42,82,152,0.25); }
+        .marker-cluster-small div  { background-color: rgba(42,82,152,0.75); }
+        .marker-cluster-medium { background-color: rgba(245,166,35,0.25); }
+        .marker-cluster-medium div { background-color: rgba(245,166,35,0.75); }
+        .marker-cluster-large  { background-color: rgba(26,58,92,0.25); }
+        .marker-cluster-large div  { background-color: rgba(26,58,92,0.75); }
+        .marker-cluster div {
+            font-size: 0.75rem; font-weight: 700; color: white;
+        }
+
+        /* ── Toast ──────────────────────────────────────────────────────── */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: var(--navy-mid); color: white; padding: 12px 22px;
+            border-radius: 50px; font-size: 0.85rem; font-weight: 500;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.2); z-index: 9999;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+            display: flex; align-items: center; gap: 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .toast.show { opacity: 1; }
+        .toast.error   { background: #ef4444; }
+        .toast.success { background: #22c55e; }
+        .toast.info    { background: var(--navy-mid); }
+
+        /* Leaflet overrides */
+        .leaflet-container { font-family: 'Inter', sans-serif; }
+        .leaflet-control-attribution { display: none; }
+
+        /* ── Responsive — Mobile stacked layout ──────────────────────────── */
+        @media (max-width: 768px) {
+            :root { --sidebar-w: 100%; }
+            html, body { overflow: auto; }
+            .app-body {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+            }
+            .left-panel {
+                display: contents;
+            }
+            .search-controls, .insights-ribbon, .results-header {
+                order: 1;
+            }
+            .skeleton-list, .pro-list {
+                order: 2;
+                max-height: 45vh;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+            .skeleton-list::-webkit-scrollbar, .pro-list::-webkit-scrollbar {
+                width: 4px;
+            }
+            .skeleton-list::-webkit-scrollbar-thumb, .pro-list::-webkit-scrollbar-thumb {
+                background: #ccc;
+                border-radius: 4px;
+            }
+            .right-panel {
+                order: 3;
+                display: block !important;
+                height: 400px !important;
+                min-height: 300px;
+                width: 100%;
+                position: relative;
+                z-index: 10 !important;
+                border-radius: 16px;
+                overflow: hidden !important;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+                margin-bottom: 32px !important;
+                flex-shrink: 0;
+                padding: 16px;
+                box-sizing: border-box;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            .leaflet-container {
+                display: block !important;
+                height: 400px !important;
+                width: 100% !important;
+            }
+            .trust-section, .mega-footer {
+                order: 4;
+                position: relative;
+                z-index: 1 !important;
+                margin-top: 0 !important;
+            }
+            .pro-card {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 16px;
+            }
+            .map-float-card { border-radius: var(--radius-lg); }
+            .navbar-logo { font-size: 1.2rem; }
+            .insights-ribbon { flex-wrap: wrap; }
+            .navbar { padding: 0 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  TOP NAVBAR                                                         -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <nav class="navbar">
+        <a class="navbar-logo" href="index.html">
+            Skill<span class="highlight">Hive</span>
+        </a>
+
+        <div class="navbar-location">
+            <div class="pin-dot"></div>
+            <span>Searching in:&nbsp;</span>
+            <span class="location-text" id="navLocationText">All Cities</span>
+        </div>
+
+        <div class="navbar-actions">
+            <button class="back-home-btn" onclick="window.location.href='index.html'">
+                <i class="fa-solid fa-arrow-left"></i> Home
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  SPLIT SCREEN BODY                                                  -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="app-body">
+
+        <!-- ─── LEFT PANEL ─────────────────────────────────────────────── -->
+        <aside class="left-panel" id="leftPanel">
+
+            <!-- ── Search Controls (sticky) ──────────────────────────── -->
+            <div class="search-controls">
+                <h2>Find a Professional</h2>
+                <div class="filter-row">
+                    <select class="filter-select" id="filterService">
+                        <option value="">All Services</option>
+                        <option value="Plumber">🔧 Plumber</option>
+                        <option value="Electrician">⚡ Electrician</option>
+                        <option value="AC Technician">❄️ AC Technician</option>
+                        <option value="Tutor">📚 Tutor</option>
+                        <option value="Beautician">💄 Beautician</option>
+                        <option value="Carpenter">🔨 Carpenter</option>
+                        <option value="Auto Mechanic (Bike)">🏍️ Auto Mechanic (Bike)</option>
+                        <option value="Auto Mechanic (Car)">🚗 Auto Mechanic (Car)</option>
+                    </select>
+                    <select class="filter-select" id="filterCity">
+                        <option value="">All Cities</option>
+                        <option value="Samundri">Samundri</option>
+                        <option value="Faisalabad">Faisalabad</option>
+                    </select>
+                    <button class="search-btn" id="searchBtn" onclick="runSearch()">
+                        <i class="fa-solid fa-magnifying-glass"></i> Go
+                    </button>
+                </div>
+
+                <!-- GPS BUTTON -->
+                <button class="locate-me-btn" id="locateMeBtn" onclick="locateMe()">
+                    <span class="gps-pulse"></span>
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                    Use Current Location
+                </button>
+            </div>
+
+            <!-- ── SMART INSIGHTS RIBBON ──────────────────────────────── -->
+            <div class="insights-ribbon" id="insightsRibbon">
+                <div class="insights-chip">
+                    <span class="chip-dot green"></span>
+                    📈 High demand for services today
+                </div>
+                <div class="insights-chip">
+                    <span class="chip-dot gold"></span>
+                    ⚡ Instant bookings available
+                </div>
+                <div class="insights-chip">
+                    <span class="chip-dot blue"></span>
+                    ✅ 47+ verified pros near you
+                </div>
+            </div>
+
+            <!-- ── Results Header ─────────────────────────────────────── -->
+            <div class="results-header">
+                <span class="count-label" id="resultsCountLabel">Select filters &amp; search</span>
+                <span class="sort-label" id="sortLabel"></span>
+            </div>
+
+            <!-- ── Skeleton Loading ───────────────────────────────────── -->
+            <div class="skeleton-list" id="skeletonList" style="display:none;">
+                <div class="skeleton-card" aria-hidden="true">
+                    <div class="skel skel-circle"></div>
+                    <div class="skel-lines"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div>
+                </div>
+                <div class="skeleton-card" aria-hidden="true">
+                    <div class="skel skel-circle"></div>
+                    <div class="skel-lines"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div>
+                </div>
+                <div class="skeleton-card" aria-hidden="true">
+                    <div class="skel skel-circle"></div>
+                    <div class="skel-lines"><div class="skel skel-line w80"></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div></div>
+                </div>
+            </div>
+
+            <!-- ── Pro Card List ──────────────────────────────────────── -->
+            <div class="pro-list" id="proList">
+                <!-- Initial discover state -->
+                <div class="discover-state" id="discoverState">
+                    <div class="ds-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+                    <h3>Discover Professionals</h3>
+                    <p>Select a service &amp; city above — or tap "Use Current Location" to find verified pros near you instantly.</p>
+                </div>
+            </div>
+
+            <!-- SKILLHIVE PROMISE — Trust Section -->
+            <div class="trust-section" id="trustSection">
+                <div class="trust-section-inner">
+                    <div class="trust-eyebrow">Our Promise</div>
+                    <div class="trust-headline">
+                        Pakistan's <span>1st Elite</span><br>Service Network
+                    </div>
+                    <div class="trust-badges">
+                        <div class="trust-badge-item">
+                            <div class="trust-badge-icon shield">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div class="trust-badge-text">
+                                <strong>Verified Professionals</strong>
+                                <small>Every pro is manually reviewed &amp; approved</small>
+                            </div>
+                        </div>
+                        <div class="trust-badge-item">
+                            <div class="trust-badge-icon bolt">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <div class="trust-badge-text">
+                                <strong>Instant Booking</strong>
+                                <small>Connect via WhatsApp in seconds</small>
+                            </div>
+                        </div>
+                        <div class="trust-badge-item">
+                            <div class="trust-badge-icon lock">
+                                <i class="fa-solid fa-lock"></i>
+                            </div>
+                            <div class="trust-badge-text">
+                                <strong>Secure Service</strong>
+                                <small>Your privacy &amp; safety, guaranteed</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ELITE MEGA FOOTER -->
+            <footer class="mega-footer">
+                <!-- Brand -->
+                <div class="mf-brand">
+                    <div class="mf-logo">Skill<span>Hive</span></div>
+                    <div class="mf-tagline">Pakistan's 1st Elite Service Network</div>
+                </div>
+
+                <!-- Socials -->
+                <div class="mf-socials">
+                    <a class="mf-social-icon" href="#" title="Facebook" aria-label="Facebook">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </a>
+                    <a class="mf-social-icon" href="#" title="Instagram" aria-label="Instagram">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+                    <a class="mf-social-icon" href="#" title="WhatsApp" aria-label="WhatsApp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+                    <a class="mf-social-icon" href="#" title="Twitter/X" aria-label="Twitter X">
+                        <i class="fa-brands fa-x-twitter"></i>
+                    </a>
+                </div>
+
+                <!-- Grid: Contact + App Buttons -->
+                <div class="mf-grid">
+                    <!-- 24/7 Support -->
+                    <div>
+                        <div class="mf-section-title">24/7 Support</div>
+                        <a class="mf-contact-item" href="tel:+923193648211">
+                            <i class="fa-solid fa-phone"></i>
+                            03193648211
+                        </a>
+                        <a class="mf-contact-item" href="mailto:mmominali211@gmail.com">
+                            <i class="fa-solid fa-envelope"></i>
+                            mmominali211@gmail.com
+                        </a>
+                    </div>
+                    <!-- App Download -->
+                    <div>
+                        <div class="mf-section-title">Get the App</div>
+                        <div class="mf-store-btns">
+                            <a class="mf-store-btn" href="#" aria-label="Download on App Store">
+                                <i class="fa-brands fa-apple"></i>
+                                <div>
+                                    <span class="btn-sub">Download on the</span>
+                                    App Store
+                                </div>
+                            </a>
+                            <a class="mf-store-btn" href="#" aria-label="Get on Google Play">
+                                <i class="fa-brands fa-google-play"></i>
+                                <div>
+                                    <span class="btn-sub">Get it on</span>
+                                    Google Play
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom bar -->
+                <div class="mf-bottom">
+                    <div class="mf-copy">© 2026 SkillHive. All rights reserved.</div>
+                    <div class="mf-links">
+                        <a class="mf-link" href="#">Privacy Policy</a>
+                        <a class="mf-link" href="#">Terms</a>
+                        <a class="mf-link" href="admin-portal.html">Admin</a>
+                    </div>
+                </div>
+            </footer>
+
+        </aside>
+
+        <!-- ─── RIGHT PANEL — Sticky/Fixed Map ─────────────────────────── -->
+        <main class="right-panel">
+            <div class="map-float-card">
+
+                <!-- Map legend pill -->
+                <div class="map-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot pro"></div> Professional
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot user"></div> You
+                    </div>
+                </div>
+
+                <!-- Leaflet Map -->
+                <div id="searchMap"></div>
+
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-[#131f35]/90 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl w-full max-w-sm p-6 relative flex flex-col transform scale-95 transition-transform duration-300" id="reviewModalContent">
+            <button onclick="closeReviewModal()" class="absolute top-4 right-4 text-white/50 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-xl font-bold text-white mb-1">Rate Professional</h3>
+            <p class="text-sm text-white/60 mb-5" id="reviewProName">...</p>
+            
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-white/80 mb-2">Rating</label>
+                <div class="flex gap-2" id="starContainer">
+                    <!-- Stars injected via JS -->
+                </div>
+            </div>
+
+            <div class="mb-6 flex items-center justify-between">
+                <label class="text-sm font-semibold text-white/80">Is Professional Polite?</label>
+                <button id="politeToggle" class="w-12 h-6 rounded-full bg-red-500/30 relative transition-colors duration-300 border border-white/10" onclick="togglePolite()">
+                    <div id="politeKnob" class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 transition-transform duration-300 shadow-sm"></div>
+                </button>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-white/80 mb-1">Your Name (Optional)</label>
+                <input type="text" id="reviewCustomerName" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-yellow-500 transition-colors" placeholder="e.g. Ali Khan">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-white/80 mb-1">Comments</label>
+                <textarea id="reviewComment" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-yellow-500 transition-colors resize-none" rows="2" placeholder="How was the service?"></textarea>
+            </div>
+
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-white/80 mb-1">Upload Proof (Required)</label>
+                <input type="file" id="proofUpload" accept="image/*" class="w-full text-sm text-white/60 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 transition-colors cursor-pointer">
+            </div>
+
+            <button id="submitReviewBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-blue-500/25 transition-all active:scale-95" onclick="submitReview()">
+                <i class="fa-solid fa-cloud-arrow-up text-lg"></i> Submit Review
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  SCRIPTS                                                            -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- Supabase CDN + backend must load BEFORE the inline script below -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="backend.js"></script>
+
+    <script>
+        'use strict';
+
+        /* ── City center coords ──────────────────────────────────────────── */
+        const CITY_COORDS = {
+            'Samundri':   { lat: 31.0667, lng: 72.9667 },
+            'Faisalabad': { lat: 31.4187, lng: 73.0791 },
+            'default':    { lat: 31.2000, lng: 73.0000 }
+        };
+
+        /* ── Supabase Client ─────────────────────────────────────────────── */
+        // Use the client already initialized by backend.js (window._supabase).
+        // Do NOT re-call createClient here.
+        const _sb = window._supabase;
+
+        /* ── State ───────────────────────────────────────────────────────── */
+        let mapInstance    = null;
+        let clusterGroup   = null;   // Leaflet.markercluster group
+        let mapMarkers     = [];
+        let currentPros    = [];
+        let searchRunning  = false;
+        let userMarker     = null;
+        let userLat        = null;   // GPS: user latitude
+        let userLng        = null;   // GPS: user longitude
+
+        /* ── Toast ───────────────────────────────────────────────────────── */
+        function showToast(msg, type = 'info') {
+            const t = document.getElementById('toast');
+            const icons = { success:'fa-check-circle', error:'fa-triangle-exclamation', info:'fa-circle-info' };
+            t.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i>${msg}`;
+            t.className = `toast show ${type}`;
+            clearTimeout(t._tid);
+            t._tid = setTimeout(() => t.classList.remove('show'), 3500);
+        }
+
+        /* ══════════════════════════════════════════════════════════════════
+           HAVERSINE DISTANCE FORMULA
+           Returns distance in km between two lat/lng coordinate pairs.
+        ══════════════════════════════════════════════════════════════════ */
+        function haversineDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Distance in km
+        }
+
+        /* ── Init Leaflet Map with Cluster Group ─────────────────────────── */
+        function initMap(lat, lng, zoom = 13) {
+            if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+            clusterGroup = null;
+            mapMarkers = []; userMarker = null;
+
+            mapInstance = L.map('searchMap', {
+                zoomControl: true,
+                attributionControl: false,
+                zoomAnimation: true,
+                fadeAnimation: true
+            }).setView([lat, lng], zoom);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png')
+             .addTo(mapInstance);
+
+            // Create the marker cluster group
+            clusterGroup = L.markerClusterGroup({
+                maxClusterRadius: 60,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                animate: true,
+                animateAddingMarkers: true
+            });
+            mapInstance.addLayer(clusterGroup);
+        }
+
+        /* ── Build a Leaflet pro marker ──────────────────────────────────── */
+        function buildProMarker(pro, lat, lng, index) {
+            const icon = L.divIcon({
+                className: '',
+                html: `<div id="marker-${index}" style="
+                    background:linear-gradient(135deg,#1a3a5c,#2a5298);
+                    color:white; width:42px; height:42px; border-radius:50%;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:0.95rem; border:3px solid #f5a623;
+                    box-shadow:0 4px 16px rgba(26,58,92,0.45);
+                    transition:transform 0.25s cubic-bezier(0.34,1.3,0.64,1), box-shadow 0.25s;
+                    cursor:pointer; will-change:transform;
+                "><i class='fa-solid fa-user-check'></i></div>`,
+                iconSize: [42, 42],
+                iconAnchor: [21, 21]
+            });
+
+            const marker = L.marker([lat, lng], { icon });
+
+            marker.on('click', () => {
+                scrollToCard(index);
+                highlightCard(index);
+            });
+
+            // Add to cluster group instead of directly to map
+            clusterGroup.addLayer(marker);
+
+            return marker;
+        }
+
+        /* ── Place / update "You are here" marker ─────────────────────────── */
+        function placeUserMarker(lat, lng) {
+            if (userMarker) { userMarker.remove(); userMarker = null; }
+
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="
+                    position:relative; width:48px; height:48px;
+                    display:flex; align-items:center; justify-content:center;
+                ">
+                    <div style="
+                        position:absolute; width:48px; height:48px; border-radius:50%;
+                        background:rgba(239,68,68,0.18);
+                        animation:youHerePulse 2s ease-out infinite;
+                    "></div>
+                    <div style="
+                        width:28px; height:28px; border-radius:50%;
+                        background:linear-gradient(135deg,#ef4444,#dc2626);
+                        border:3px solid white;
+                        box-shadow:0 3px 12px rgba(239,68,68,0.5);
+                        display:flex; align-items:center; justify-content:center;
+                        font-size:0.7rem; color:white; position:relative; z-index:1;
+                    "><i class="fa-solid fa-person" style="font-size:0.72rem;"></i></div>
+                </div>
+                <style>
+                    @keyframes youHerePulse {
+                        0%   { transform:scale(0.6); opacity:0.8; }
+                        100% { transform:scale(1.8); opacity:0; }
+                    }
+                </style>`,
+                iconSize: [48, 48],
+                iconAnchor: [24, 24]
+            });
+
+            userMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(mapInstance);
+            userMarker.bindTooltip('📍 You are here', {
+                permanent: false, direction: 'top', offset: [0, -28],
+                className: 'leaflet-tooltip-custom'
+            });
+        }
+
+        /* ── LOCATE ME — GPS Button Logic ─────────────────────────────────── */
+        async function locateMe() {
+            if (!navigator.geolocation) {
+                showToast('Geolocation is not supported by this browser.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('locateMeBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Locating...`;
+
+            try {
+                const position = await new Promise((resolve, reject) =>
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        timeout: 12000,
+                        enableHighAccuracy: true,
+                        maximumAge: 0
+                    })
+                );
+
+                userLat = position.coords.latitude;
+                userLng = position.coords.longitude;
+
+                // Ensure map exists
+                if (!mapInstance) initMap(userLat, userLng, 14);
+
+                // Fly to user location
+                mapInstance.flyTo([userLat, userLng], 15, { animate: true, duration: 1.4 });
+
+                // Place "You are here" marker
+                placeUserMarker(userLat, userLng);
+
+                showToast('📍 Location found! Now showing nearest professionals first.', 'success');
+
+                // If pros are already loaded, re-sort by distance
+                if (currentPros.length > 0) {
+                    sortAndRenderByDistance();
+                }
+
+            } catch (err) {
+                const msgs = {
+                    1: 'Location permission denied. Please allow it in your browser.',
+                    2: 'Location unavailable. Check your GPS or network.',
+                    3: 'Location request timed out. Please try again.'
+                };
+                showToast(msgs[err.code] || 'Could not get location.', 'error');
+                userLat = null; userLng = null;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="gps-pulse"></span>
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                    Use Current Location`;
+            }
+        }
+
+        /* ── Sort by Haversine distance & re-render ─────────────────────── */
+        function sortAndRenderByDistance() {
+            if (!userLat || !userLng || currentPros.length === 0) return;
+
+            const coords = CITY_COORDS[document.getElementById('filterCity').value] || CITY_COORDS['default'];
+
+            // Attach distance to each pro using lat/lng columns from Supabase
+            const prosWithDist = currentPros.map(pro => {
+                const pLat = pro.lat ?? (coords.lat + (Math.random()-0.5)*0.01);
+                const pLng = pro.lng ?? (coords.lng + (Math.random()-0.5)*0.01);
+                const dist = haversineDistance(userLat, userLng, pLat, pLng);
+                return { ...pro, _dist: dist, _lat: pLat, _lng: pLng };
+            });
+
+            prosWithDist.sort((a, b) => a._dist - b._dist);
+            currentPros = prosWithDist;
+
+            document.getElementById('sortLabel').textContent = 'Sorted by distance 🚗';
+            renderProCards(prosWithDist, coords.lat, coords.lng, true);
+        }
+
+        /* ── Highlight card & bounce marker ──────────────────────────────── */
+        function highlightCard(index) {
+            document.querySelectorAll('.pro-card').forEach(c => c.classList.remove('highlighted'));
+            resetAllMarkers();
+
+            const cardEl = document.getElementById(`proCard-${index}`);
+            if (cardEl) cardEl.classList.add('highlighted');
+
+            const markerEl = document.getElementById(`marker-${index}`);
+            if (markerEl) {
+                markerEl.style.transform   = 'scale(1.45) translateY(-6px)';
+                markerEl.style.boxShadow   = '0 10px 30px rgba(245,166,35,0.65)';
+                markerEl.style.borderColor = '#ffffff';
+                markerEl.style.background  = 'linear-gradient(135deg,#f5a623,#d4891a)';
+                markerEl.style.color       = '#0d1f3c';
+            }
+        }
+
+        function resetAllMarkers() {
+            document.querySelectorAll('[id^="marker-"]').forEach(el => {
+                el.style.transform   = 'scale(1) translateY(0)';
+                el.style.boxShadow   = '0 4px 16px rgba(26,58,92,0.45)';
+                el.style.borderColor = '#f5a623';
+                el.style.background  = 'linear-gradient(135deg,#1a3a5c,#2a5298)';
+                el.style.color       = 'white';
+            });
+        }
+
+        function scrollToCard(index) {
+            const card = document.getElementById(`proCard-${index}`);
+            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        /* ── Render pro cards list ────────────────────────────────────────── */
+        // FIXED: BUG 2
+        function renderProCards(pros, centerLat, centerLng, distanceSorted = false, allReviews = []) {
+            const listEl = document.getElementById('proList');
+            listEl.innerHTML = '';
+
+            // Clear cluster markers
+            if (clusterGroup) clusterGroup.clearLayers();
+            mapMarkers = [];
+
+            // PREMIUM EMPTY STATE
+            if (pros.length === 0) {
+                listEl.innerHTML = `
+                    <div class="premium-empty">
+                        <div class="radar-wrap">
+                            <div class="radar-ring"></div>
+                            <div class="radar-ring"></div>
+                            <div class="radar-ring"></div>
+                            <div class="radar-core">
+                                <div class="radar-icon-inner">
+                                    <i class="fa-solid fa-satellite-dish"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <h3>No Pros Found in This Area</h3>
+                        <p>We're expanding fast, but currently no verified professionals match this exact location. Try another area or service!</p>
+                        <button class="empty-action-btn" onclick="document.getElementById('filterCity').value=''; document.getElementById('filterService').value=''; showToast('Filters cleared — try again!', 'info');">
+                            <i class="fa-solid fa-rotate-right"></i> Clear Filters
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            pros.forEach((pro, i) => {
+                // Use pre-computed coords if distance sorted, else use Supabase lat/lng columns
+                const proLat = pro._lat ?? (pro.lat ?? centerLat + (Math.random()-0.5)*0.01);
+                const proLng = pro._lng ?? (pro.lng ?? centerLng + (Math.random()-0.5)*0.01);
+
+                const card = document.createElement('div');
+                // FIXED: BUG 5
+                card.className = 'pro-card';
+                card.id = `proCard-${i}`;
+
+                // selfie_url is the Supabase Storage public URL
+                const hasImage   = pro.selfie_url && pro.selfie_url.startsWith('http');
+                const initials   = (pro.name || 'P').split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2);
+                // FIXED: BUG 1
+                const avatarHtml = hasImage
+                    ? `<div class="card-avatar" style="background-image:url('${pro.selfie_url}');background-size:cover;background-position:center;background-color:transparent;font-size:0;"></div>`
+                    : `<div class="card-avatar">${initials}</div>`;
+
+                const exp = parseInt(pro.experience) || 1;
+                
+                // FIXED: BUG 2
+                const reviews = allReviews.filter(r => r.pro_id === pro.new_id);
+                let ratingHtml = '';
+                let trustBadgeHtml = '';
+                if (reviews && reviews.length > 0) {
+                    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+                    const roundedRating = avgRating.toFixed(1);
+                    const stars = '★'.repeat(Math.round(avgRating)) + '☆'.repeat(5 - Math.round(avgRating));
+                    const latestComment = reviews[0].comment || 'Great service!';
+
+                    ratingHtml = `
+                        <div class="card-stars">
+                            <span style="color:#fbbf24;font-size:0.7rem;">${stars}</span>
+                            <span class="rating-text">${roundedRating} (${reviews.length} reviews)</span>
+                        </div>
+                        <div class="text-xs text-white/70 italic mt-2 bg-white/5 p-2 rounded border border-white/5 border-l-2 border-l-yellow-500">
+                            "${latestComment}"
+                        </div>
+                    `;
+                    trustBadgeHtml = `<span class="badge-rating">${roundedRating} ⭐</span>`;
+                } else {
+                    ratingHtml = `
+                        <div class="card-stars">
+                            <span class="text-xs text-white/50 italic">No reviews yet</span>
+                        </div>
+                    `;
+                    trustBadgeHtml = `<span class="badge-rating text-white/50">New</span>`;
+                }
+
+                // Dynamic verification
+                const isVerified = pro.is_verified === true || pro.is_verified === 'TRUE' || pro.is_verified === 'true' || pro.whatsapp_verified === true;
+                const verifiedHtml = isVerified 
+                    ? `<span title="Verified by WhatsApp" class="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-green-500 text-white shadow-sm flex-shrink-0">
+                                <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.573-.187-.981-.342-1.722-.647-2.839-2.42-2.923-2.532-.084-.112-.695-.929-.695-1.77 0-.841.442-1.258.595-1.42.153-.162.332-.202.443-.202.11 0 .221 0 .313.004.098.005.23-.038.358.273.132.324.453 1.109.493 1.189.04.081.066.176.015.277-.05.101-.077.162-.153.252-.077.091-.161.196-.226.27-.072.083-.148.174-.063.321.084.148.375.624.805 1.009.553.494 1.026.647 1.173.717.147.071.233.059.321-.041.088-.101.378-.442.478-.593.101-.152.202-.126.335-.077.133.049.843.397.988.471.144.073.24.11.275.172.036.061.036.353-.108.758z"/></svg>
+                            </span>`
+                    : '';
+                const verifiedTrustBadge = isVerified ? `<span class="badge-verified">ID Verified ✅</span>` : '';
+
+                const phone    = (pro.phone || '').replace(/\D/g, '');
+                const city     = pro.city || 'N/A';
+                const area     = pro.area || '';
+                const location = area ? `${area}, ${city}` : city;
+
+                // Distance badge — shown when user location is known
+                let distanceBadgeHtml = '';
+                if (distanceSorted && pro._dist !== undefined) {
+                    const distStr = pro._dist < 1
+                        ? `${(pro._dist * 1000).toFixed(0)} m away`
+                        : `${pro._dist.toFixed(1)} km away`;
+                    distanceBadgeHtml = `<span class="distance-badge">🚗 ${distStr}</span>`;
+                }
+
+                card.innerHTML = `
+                    ${avatarHtml}
+                    <div class="card-body">
+                        <div class="card-name flex items-center gap-1.5">
+                            ${pro.name || 'Professional'}
+                            ${verifiedHtml}
+                        </div>
+                        <div class="card-skill-row">
+                            <span class="skill-chip">${pro.skill || ''}</span>
+                            ${exp ? `<span class="exp-chip">${exp} yrs</span>` : ''}
+                        </div>
+                        ${ratingHtml}
+                        <div class="trust-badge-row">
+                            ${verifiedTrustBadge}
+                            ${trustBadgeHtml}
+                            ${distanceBadgeHtml}
+                        </div>
+                        <div class="card-location">
+                            <i class="fa-solid fa-location-dot" style="color:var(--gold);font-size:0.65rem;"></i>
+                            ${location}
+                        </div>
+                    </div>
+                    <div class="card-action flex gap-2 !w-auto">
+                        <button class="card-book-btn !flex-1" onclick="chatOnWhatsApp('${phone}', event)">
+                            <i class="fa-brands fa-whatsapp"></i> Chat
+                        </button>
+                        <button class="flex-1 rounded-md bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-bold py-2 px-3 text-xs flex items-center justify-center gap-1 hover:shadow-lg transition-all" onclick="openReviewModal('${pro.new_id || pro.id}', '${phone}', '${pro.name}', event)">
+                            <i class="fa-solid fa-star"></i> Rate
+                        </button>
+                    </div>
+                `;
+
+                card.addEventListener('mouseenter', () => {
+                    highlightCard(i);
+                    if (mapInstance) mapInstance.panTo([proLat, proLng], { animate: true, duration: 0.6 });
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.classList.remove('highlighted');
+                    resetAllMarkers();
+                });
+
+                listEl.appendChild(card);
+
+                const marker = buildProMarker(pro, proLat, proLng, i);
+                mapMarkers.push({ marker, cardEl: card, proData: pro });
+            });
+
+            // Fit map bounds to show all clustered markers
+            if (mapInstance && pros.length > 0) {
+                const latLngs = mapMarkers.map(m => m.marker.getLatLng());
+                latLngs.push(L.latLng(centerLat, centerLng));
+                mapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [55, 55], maxZoom: 15 });
+            }
+        }
+
+        /* ── WhatsApp chat link ───────────────────────────────────────────── */
+        function chatOnWhatsApp(phone, e) {
+            e.stopPropagation();
+            if (!phone) { showToast('Phone number not available.', 'error'); return; }
+            window.open(`https://wa.me/${phone}`, '_blank');
+        }
+
+        // FIXED: BUG 6 - Deleted local fetchActiveProfessionals
+
+        /* ── Main search runner ───────────────────────────────────────────── */
+        async function runSearch() {
+            if (searchRunning) return;
+            searchRunning = true;
+
+            const service = document.getElementById('filterService').value;
+            const city    = document.getElementById('filterCity').value;
+            const btn     = document.getElementById('searchBtn');
+
+            // Update nav location indicator
+            const locParts = [service, city].filter(Boolean);
+            document.getElementById('navLocationText').textContent =
+                locParts.length ? locParts.join(' · ') : 'All Cities';
+
+            // Show skeleton, hide discover/trust states
+            document.getElementById('skeletonList').style.display = 'block';
+            document.getElementById('proList').innerHTML = '';
+            document.getElementById('resultsCountLabel').textContent = 'Searching...';
+            document.getElementById('sortLabel').textContent = '';
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            const coords = CITY_COORDS[city] || CITY_COORDS['default'];
+            initMap(coords.lat, coords.lng, 13);
+
+            // Restore user marker if GPS is active
+            if (userLat && userLng) {
+                placeUserMarker(userLat, userLng);
+            }
+
+            try {
+                // FIXED: BUG 1
+                const [pros, allReviews] = await Promise.all([
+                    window.fetchActiveProfessionals ? window.fetchActiveProfessionals(service || null, city || null) : fetchActiveProfessionals(service || null, city || null),
+                    _sb.from('reviews')
+                       .select('pro_id, rating, comment, customer_name')
+                       // FIXED: BUG 4
+                       .eq('is_approved', 'TRUE')
+                       .then(r => r.data || [])
+                ]);
+
+                document.getElementById('skeletonList').style.display = 'none';
+                document.getElementById('resultsCountLabel').textContent =
+                    `${pros.length} professional${pros.length !== 1 ? 's' : ''} found`;
+
+                // If user location known → sort by Haversine distance
+                if (userLat && userLng && pros.length > 0) {
+                    const prosWithDist = pros.map(pro => {
+                        const pLat = pro.lat ?? (coords.lat + (Math.random()-0.5)*0.01);
+                        const pLng = pro.lng ?? (coords.lng + (Math.random()-0.5)*0.01);
+                        const dist = haversineDistance(userLat, userLng, pLat, pLng);
+                        return { ...pro, _dist: dist, _lat: pLat, _lng: pLng };
+                    });
+                    prosWithDist.sort((a, b) => a._dist - b._dist);
+                    currentPros = prosWithDist;
+                    document.getElementById('sortLabel').textContent = 'Sorted by distance 🚗';
+                    renderProCards(prosWithDist, coords.lat, coords.lng, true, allReviews);
+                } else {
+                    currentPros = pros;
+                    document.getElementById('sortLabel').textContent = pros.length ? 'Sorted by rating' : '';
+                    renderProCards(pros, coords.lat, coords.lng, false, allReviews);
+                }
+
+                if (pros.length > 0) {
+                    showToast(`${pros.length} pro${pros.length > 1 ? 's' : ''} found!`, 'success');
+                }
+
+            } catch (err) {
+                console.error('[Search] Supabase error:', err);
+                document.getElementById('skeletonList').style.display = 'none';
+                document.getElementById('resultsCountLabel').textContent = 'Error loading results';
+                showToast('Failed to fetch professionals. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Go';
+                searchRunning = false;
+            }
+        }
+
+        /* ── Initialize default map on load ──────────────────────────────── */
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap(31.2000, 73.0000, 10);
+        });
+
+        /* ── Mobile Map Resize Fix ───────────────────────────────────────── */
+        function fixMapVisibility() {
+            if (window.innerWidth <= 768) {
+                const mapContainer = document.getElementById('searchMap');
+                if (mapContainer && typeof mapInstance !== 'undefined' && mapInstance) {
+                    mapContainer.style.display = 'block';
+                    mapContainer.style.height = '400px';
+                    mapInstance.invalidateSize();
+                }
+            }
+        }
+        window.addEventListener('resize', fixMapVisibility);
+        window.addEventListener('load', () => {
+            setTimeout(fixMapVisibility, 800);
+            setTimeout(fixMapVisibility, 1500);
+        });
+
+        /* ── Premium Review System & Modal Logic ─────────────────────────── */
+        let currentReviewState = { proId: null, phone: null, name: null, rating: 5, isPolite: true };
+
+        function openReviewModal(proId, phone, name, e) {
+            e.stopPropagation();
+            currentReviewState = { proId, phone, name, rating: 5, isPolite: true };
+            document.getElementById('reviewProName').textContent = name;
+            renderStars();
+            updatePoliteUI();
+            
+            const modal = document.getElementById('reviewModal');
+            const content = document.getElementById('reviewModalContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeReviewModal() {
+            const modal = document.getElementById('reviewModal');
+            const content = document.getElementById('reviewModalContent');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('proofUpload').value = '';
+                document.getElementById('reviewComment').value = '';
+                document.getElementById('reviewCustomerName').value = '';
+            }, 300);
+        }
+
+        function renderStars() {
+            const container = document.getElementById('starContainer');
+            container.innerHTML = '';
+            for(let i=1; i<=5; i++) {
+                const isFilled = i <= currentReviewState.rating;
+                const svg = `<svg class="w-8 h-8 cursor-pointer transition-transform hover:scale-110 ${isFilled ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : 'text-gray-500/50'}" fill="currentColor" viewBox="0 0 24 24" onclick="setRating(${i})"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>`;
+                container.insertAdjacentHTML('beforeend', svg);
+            }
+        }
+
+        function setRating(r) { currentReviewState.rating = r; renderStars(); }
+
+        function togglePolite() {
+            currentReviewState.isPolite = !currentReviewState.isPolite;
+            updatePoliteUI();
+        }
+
+        function updatePoliteUI() {
+            const toggle = document.getElementById('politeToggle');
+            const knob = document.getElementById('politeKnob');
+            if (currentReviewState.isPolite) {
+                toggle.classList.remove('bg-red-500/30');
+                toggle.classList.add('bg-green-500/50');
+                knob.classList.add('translate-x-6');
+            } else {
+                toggle.classList.add('bg-red-500/30');
+                toggle.classList.remove('bg-green-500/50');
+                knob.classList.remove('translate-x-6');
+            }
+        }
+
+        async function submitReview() {
+            if (!currentReviewState.proId) return;
+
+            const proofInput = document.getElementById('proofUpload');
+            const file = proofInput.files[0];
+            const comment = document.getElementById('reviewComment').value.trim();
+            const customerName = document.getElementById('reviewCustomerName').value.trim();
+
+            if (!file) {
+                showToast('Please upload a proof image.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('submitReviewBtn');
+            const originalBtnHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-lg"></i> Uploading...';
+
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const filePath = `reviews/${fileName}`;
+
+                const { data: uploadData, error: uploadError } = await _sb.storage
+                    .from('review-proofs')
+                    .upload(filePath, file);
+
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = _sb.storage.from('review-proofs').getPublicUrl(filePath);
+                const proof_url = publicUrlData.publicUrl;
+
+                const payload = {
+                    pro_id: currentReviewState.proId,
+                    customer_name: customerName || 'Anonymous',
+                    rating: currentReviewState.rating,
+                    comment: comment,
+                    is_polite: currentReviewState.isPolite ? 'TRUE' : 'FALSE',
+                    proof_url: proof_url,
+                    is_approved: 'FALSE'
+                };
+
+                await window.submitReviewToDatabase(payload);
+                showToast('Review submitted! It will be live once approved.', 'success');
+                closeReviewModal();
+
+            } catch (err) {
+                console.error('[SkillHive] submitReview error:', err);
+                showToast('Submission failed. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHtml;
+            }
+        }
+
+        /* ── Supabase Realtime Reviews Listener ──────────────────────────── */
+        if (_sb) {
+            _sb.channel('public:reviews')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'reviews' }, payload => {
+                    const rev = payload.new;
+                    if (rev && rev.is_approved === 'TRUE') {
+                        showToast(`New 5-star review approved for a professional!`, 'success');
+                        // Highlight UI dynamically if pro is on screen
+                        const cardNameEls = document.querySelectorAll('.card-name');
+                        // In a fully dynamic app, we'd rebuild the rating element. 
+                        // For now, toast provides immediate confirmation.
+                    }
+                })
+                .subscribe((status) => {
+                    console.log('[Search] Realtime Reviews subscription:', status);
+                });
+        }
+    </script>
+
+</body>
+</html>
