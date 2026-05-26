@@ -808,6 +808,49 @@
             .insights-ribbon { flex-wrap: wrap; }
             .navbar { padding: 0 16px; }
         }
+
+        /* Premium Skeleton Loading Animation */
+        .skeleton-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            min-height: 180px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .skeleton-card::after {
+            content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+            transform: translateX(-100%);
+            background-image: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.05) 60%, rgba(255,255,255,0) 100%);
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+        
+        /* Mobile View Toggle Architecture */
+        .mobile-view-toggle {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px; padding: 4px; display: none; z-index: 50;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); gap: 4px;
+        }
+        .toggle-btn {
+            padding: 8px 20px; border-radius: 26px; color: white; font-weight: 600;
+            font-size: 0.9rem; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;
+            border: none; cursor: pointer;
+        }
+        .toggle-btn.active { background: var(--gold); color: #000; }
+        
+        @media (max-width: 768px) {
+            .mobile-view-toggle { display: flex; }
+            .right-panel.map-container { display: none !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100vh !important; z-index: 40 !important; margin: 0 !important; border-radius: 0 !important; padding: 0 !important; }
+            .right-panel.map-container.show-map { display: block !important; }
+            .right-panel.map-container.show-map .map-float-card { height: 100%; border-radius: 0; }
+            .right-panel.map-container.show-map #searchMap { height: 100%; }
+            .left-panel.hide-list { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -844,8 +887,8 @@
             <!-- ── Search Controls (sticky) ──────────────────────────── -->
             <div class="search-controls">
                 <h2>Find a Professional</h2>
-                <div class="filter-row">
-                    <select class="filter-select" id="filterService">
+                <div class="filter-row flex-nowrap overflow-x-auto hide-scrollbar w-full">
+                    <select class="filter-select flex-shrink-0 min-w-[140px]" id="filterService">
                         <option value="">All Services</option>
                         <option value="Plumber">🔧 Plumber</option>
                         <option value="Electrician">⚡ Electrician</option>
@@ -856,7 +899,7 @@
                         <option value="Auto Mechanic (Bike)">🏍️ Auto Mechanic (Bike)</option>
                         <option value="Auto Mechanic (Car)">🚗 Auto Mechanic (Car)</option>
                     </select>
-                    <select class="filter-select" id="filterCity">
+                    <select class="filter-select flex-shrink-0 min-w-[140px]" id="filterCity">
                         <option value="">All Cities</option>
                         <option value="Samundri">Samundri</option>
                         <option value="Faisalabad">Faisalabad</option>
@@ -869,7 +912,7 @@
                         <option value="Quetta">Quetta</option>
                         <option value="Hyderabad">Hyderabad</option>
                     </select>
-                    <button class="search-btn" id="searchBtn" onclick="runSearch()">
+                    <button class="search-btn flex-shrink-0" id="searchBtn" onclick="runSearch()">
                         <i class="fa-solid fa-magnifying-glass"></i> Go
                     </button>
                 </div>
@@ -1477,6 +1520,7 @@
 
                 // Dynamic verification
                 const isVerified = pro.is_verified === true || pro.is_verified === 'TRUE' || pro.is_verified === 'true' || pro.whatsapp_verified === true;
+                const verifiedBadge = pro.status === 'Active' ? `<i class="fa-solid fa-circle-check text-gold" style="color: #F5A623; margin-left: 6px;" title="Verified Professional"></i>` : '';
                 const verifiedHtml = isVerified 
                     ? `<span title="Verified by WhatsApp" class="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-green-500 text-white shadow-sm flex-shrink-0">
                                 <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.573-.187-.981-.342-1.722-.647-2.839-2.42-2.923-2.532-.084-.112-.695-.929-.695-1.77 0-.841.442-1.258.595-1.42.153-.162.332-.202.443-.202.11 0 .221 0 .313.004.098.005.23-.038.358.273.132.324.453 1.109.493 1.189.04.081.066.176.015.277-.05.101-.077.162-.153.252-.077.091-.161.196-.226.27-.072.083-.148.174-.063.321.084.148.375.624.805 1.009.553.494 1.026.647 1.173.717.147.071.233.059.321-.041.088-.101.378-.442.478-.593.101-.152.202-.126.335-.077.133.049.843.397.988.471.144.073.24.11.275.172.036.061.036.353-.108.758z"/></svg>
@@ -1517,6 +1561,7 @@
                     <div class="card-body">
                         <div class="card-name flex items-center gap-1.5">
                             ${pro.name || 'Professional'}
+                            ${verifiedBadge}
                             ${verifiedHtml}
                         </div>
                         <div class="card-skill-row">
@@ -1623,6 +1668,19 @@
             }).addTo(mapInstance);
         };
 
+        /* ── Core Functions ─────────────────────────────────────────────── */
+        function showSkeletons() {
+            const listEl = document.getElementById('proList');
+            listEl.innerHTML = Array(4).fill('<div class="skeleton-card"></div>').join('');
+        }
+
+        function updateURLParams(skill, area) {
+            const url = new URL(window.location);
+            if (skill) url.searchParams.set('skill', skill); else url.searchParams.delete('skill');
+            if (area) url.searchParams.set('area', area); else url.searchParams.delete('area');
+            window.history.pushState({}, '', url);
+        }
+
         /* ── Main search runner ───────────────────────────────────────────── */
         async function runSearch() {
             if (searchRunning) return;
@@ -1632,14 +1690,16 @@
             const city    = document.getElementById('filterCity').value;
             const btn     = document.getElementById('searchBtn');
 
+            updateURLParams(service, city);
+
             // Update nav location indicator
             const locParts = [service, city].filter(Boolean);
             document.getElementById('navLocationText').textContent =
                 locParts.length ? locParts.join(' · ') : 'All Cities';
 
             // Show skeleton, hide discover/trust states
-            document.getElementById('skeletonList').style.display = 'block';
-            document.getElementById('proList').innerHTML = '';
+            document.getElementById('skeletonList').style.display = 'none';
+            showSkeletons();
             document.getElementById('resultsCountLabel').textContent = 'Searching...';
             document.getElementById('sortLabel').textContent = '';
             btn.disabled = true;
@@ -1704,7 +1764,16 @@
 
         /* ── Initialize default map on load ──────────────────────────────── */
         document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            let hasParams = false;
+            if (params.has('skill')) { document.getElementById('filterService').value = params.get('skill'); hasParams = true; }
+            if (params.has('area')) { document.getElementById('filterCity').value = params.get('area'); hasParams = true; }
+
             initMap(31.2000, 73.0000, 10);
+            
+            if (hasParams) {
+                runSearch();
+            }
         });
 
         /* ── Mobile Map Resize Fix ───────────────────────────────────────── */
@@ -1850,7 +1919,8 @@
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'reviews' }, payload => {
                     const rev = payload.new;
                     if (rev && rev.is_approved === 'TRUE') {
-                        showToast(`New 5-star review approved for a professional!`, 'success');
+                        const ratingCount = payload.new.rating || 5;
+                        showToast(`A professional just received a glowing ${ratingCount}-star review! 🌟`, 'success');
                         // Highlight UI dynamically if pro is on screen
                         const cardNameEls = document.querySelectorAll('.card-name');
                         // In a fully dynamic app, we'd rebuild the rating element. 
@@ -1896,7 +1966,10 @@ window.sendToWhatsApp = function() {
         return;
     }
     
-    let cleanPhone = window.currentWaPro.phone.replace(/\\+/g, '');
+    let phone = window.currentWaPro.phone;
+    let cleanPhone = phone.toString().replace(/\D/g, ''); 
+    // Reformat local numbers natively
+    if (cleanPhone.startsWith('03')) cleanPhone = '92' + cleanPhone.substring(1);
     let rawMessage = `Assalam o Alaikum ${window.currentWaPro.name} bhai! Main SkillHive platform se aya hoon. Mujhe Samundri mein ${window.currentWaPro.skill} ki service chahiye. Mera masla yeh hai: ${userIssue}. Kya aap available hain?`;
     
     let finalUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(rawMessage)}`;
@@ -1921,5 +1994,46 @@ window.sendToWhatsApp = function() {
         </div>
     </div>
 </div>
+
+    <div class="mobile-view-toggle">
+        <button id="showListBtn" class="toggle-btn active" onclick="switchMobileView('list')">
+            <i class="fa-solid fa-list"></i> List
+        </button>
+        <button id="showMapBtn" class="toggle-btn" onclick="switchMobileView('map')">
+            <i class="fa-solid fa-map"></i> Map
+        </button>
+    </div>
+
+<script>
+function switchMobileView(view) {
+    const mapDiv = document.querySelector('.right-panel'); 
+    const listDiv = document.querySelector('.left-panel');
+    const btnList = document.getElementById('showListBtn');
+    const btnMap = document.getElementById('showMapBtn');
+    
+    if (mapDiv) mapDiv.classList.add('map-container');
+
+    if (view === 'map') {
+        if (mapDiv) mapDiv.classList.add('show-map');
+        if (listDiv) listDiv.classList.add('hide-list');
+        if (btnMap) btnMap.classList.add('active');
+        if (btnList) btnList.classList.remove('active');
+        if(typeof mapInstance !== 'undefined' && mapInstance) mapInstance.invalidateSize(); 
+    } else {
+        if (mapDiv) mapDiv.classList.remove('show-map');
+        if (listDiv) listDiv.classList.remove('hide-list');
+        if (btnList) btnList.classList.add('active');
+        if (btnMap) btnMap.classList.remove('active');
+    }
+}
+</script>
+
+    <div class="bottom-app-bar md:hidden">
+        <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="search.html" class="nav-item active"><i class="fa-solid fa-magnifying-glass"></i> Search</a>
+        <a href="join-pro.html" class="nav-item"><i class="fa-solid fa-briefcase"></i> Join</a>
+        <a href="pro-dashboard.html" class="nav-item"><i class="fa-solid fa-user"></i> Profile</a>
+    </div>
+
 </body>
 </html>

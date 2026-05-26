@@ -164,6 +164,37 @@
 
         @media (max-width: 768px) {
             .glass-card { padding: 36px 16px; }
+
+            /* Native App Touch & Scroll Optimizations */
+            /* Hide Desktop Navbars smoothly */
+            .desktop-nav { display: none !important; }
+            
+            /* Prevent pull-to-refresh & double tap zoom for true app feel */
+            body { overscroll-behavior-y: none; touch-action: manipulation; padding-bottom: 80px; }
+            
+            /* Horizontal invisible scrollbar for Chips */
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            
+            /* Fat-Finger Haptic Touch State (Scale Down on Tap) */
+            button, .pro-card, .glass-btn { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+            button:active, .pro-card:active, .glass-btn:active { transform: scale(0.96); opacity: 0.9; }
+
+            /* Glassmorphic Bottom App Bar */
+            .bottom-app-bar {
+                position: fixed; bottom: 0; left: 0; width: 100%; height: 72px;
+                background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                border-top: 1px solid rgba(255, 255, 255, 0.08); z-index: 1000;
+                display: flex; justify-content: space-around; align-items: center;
+                padding-bottom: env(safe-area-inset-bottom); /* iOS SafeArea */
+            }
+            .nav-item {
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                color: #94a3b8; font-size: 0.7rem; font-weight: 500; gap: 4px; text-decoration: none; transition: 0.3s;
+            }
+            .nav-item i { font-size: 1.2rem; margin-bottom: 2px; }
+            .nav-item.active { color: #F5A623; } /* Gold active state */
+            .nav-item.active i { text-shadow: 0 0 10px rgba(245, 166, 35, 0.5); }
         }
     </style>
 </head>
@@ -208,6 +239,13 @@
             <i class="fa-solid fa-shield-halved"></i>
             All professionals are manually verified
         </div>
+    </div>
+
+    <div class="bottom-app-bar md:hidden">
+        <a href="index.html" class="nav-item active"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="search.html" class="nav-item"><i class="fa-solid fa-magnifying-glass"></i> Search</a>
+        <a href="join-pro.html" class="nav-item"><i class="fa-solid fa-briefcase"></i> Join</a>
+        <a href="pro-dashboard.html" class="nav-item"><i class="fa-solid fa-user"></i> Profile</a>
     </div>
 
 </body>

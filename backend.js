@@ -228,23 +228,19 @@ window.addProfessional = async function(data) {
 
 window.fetchPendingReviews = async function() {
     try {
-        const query = _supabase
+        const { data: reviewsData, error: reviewsError } = await _supabase
             .from('reviews')
-            // Removed professionals(name) join for debugging purposes
-            .select('*')
-            .or('is_approved.eq.FALSE,is_approved.eq.false');
+            .select('*, professionals(name)')
+            .eq('is_approved', 'FALSE')
+            .order('created_at', { ascending: false });
 
-        console.log('[SkillHive] Query URL:', query.url ? query.url.toString() : query);
-
-        const { data, error } = await query;
-
-        if (error) {
-            console.error('[SkillHive] Detailed fetchPendingReviews error:', error);
-            throw error;
+        if (reviewsError) {
+            console.error('[SkillHive] Detailed fetchPendingReviews error:', reviewsError);
+            throw reviewsError;
         }
         
-        console.log('[SkillHive] fetchPendingReviews returning data:', data);
-        return data || [];
+        console.log('[SkillHive] fetchPendingReviews returning data:', reviewsData);
+        return reviewsData || [];
     } catch (err) {
         console.error('[SkillHive] fetchPendingReviews error:', err);
         throw new Error('Failed to load pending reviews.');

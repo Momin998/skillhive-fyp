@@ -145,6 +145,52 @@
             padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px;
             backdrop-filter: blur(10px); z-index: 10;
         }
+
+        /* Native App Touch & Scroll Optimizations */
+        @media (max-width: 768px) {
+            /* Hide Desktop Navbars smoothly */
+            .desktop-nav { display: none !important; }
+            
+            /* Prevent pull-to-refresh & double tap zoom for true app feel */
+            body { overscroll-behavior-y: none; touch-action: manipulation; padding-bottom: 80px; }
+            
+            /* Horizontal invisible scrollbar for Chips */
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            
+            /* Fat-Finger Haptic Touch State (Scale Down on Tap) */
+            button, .pro-card, .glass-btn { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+            button:active, .pro-card:active, .glass-btn:active { transform: scale(0.96); opacity: 0.9; }
+
+            /* Glassmorphic Bottom App Bar */
+            .bottom-app-bar {
+                position: fixed; bottom: 0; left: 0; width: 100%; height: 72px;
+                background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                border-top: 1px solid rgba(255, 255, 255, 0.08); z-index: 1000;
+                display: flex; justify-content: space-around; align-items: center;
+                padding-bottom: env(safe-area-inset-bottom); /* iOS SafeArea */
+            }
+            .nav-item {
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                color: #94a3b8; font-size: 0.7rem; font-weight: 500; gap: 4px; text-decoration: none; transition: 0.3s;
+            }
+            .nav-item i { font-size: 1.2rem; margin-bottom: 2px; }
+            .nav-item.active { color: #F5A623; } /* Gold active state */
+            .nav-item.active i { text-shadow: 0 0 10px rgba(245, 166, 35, 0.5); }
+
+            /* Bottom Sheet Upgrade */
+            .modal-content {
+                position: absolute; bottom: 0; left: 0; width: 100%; border-radius: 24px 24px 0 0;
+                transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+                max-height: 85vh; overflow-y: auto; padding-bottom: 40px;
+            }
+            .modal-container.show .modal-content { transform: translateY(0); }
+            /* Add a small drag handle line at the top of the sheet */
+            .modal-content::before {
+                content: ''; display: block; width: 40px; height: 4px; background: rgba(255,255,255,0.2);
+                border-radius: 2px; margin: 0 auto 16px auto;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen pb-28">
@@ -276,9 +322,13 @@
 
                 if (!window._supabase) throw new Error("Database connection timeout.");
 
+                // UUID Regex Check
+                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+                const queryColumn = isUUID ? 'new_id' : 'profile_slug';
+
                 // Parallel Sub-Queries
                 const [proRes, reviewsRes] = await Promise.all([
-                    window._supabase.from('professionals').select('*').eq('profile_slug', slug).single(),
+                    window._supabase.from('professionals').select('*').eq(queryColumn, slug).single(),
                     window._supabase.from('reviews').select('*').eq('pro_id', slug).eq('is_approved', 'TRUE')
                 ]);
 
@@ -484,11 +534,21 @@
                 });
             }
 
-            // Viral Share Engine (Organic WhatsApp Loop)
+            // Viral Share Engine (Organic WhatsApp Clickable Loop)
             const shareBtn = document.getElementById('share-btn');
             shareBtn.onclick = () => {
-                const profileUrl = `${window.location.origin}/profile.html?id=${pro.profile_slug || pro.new_id}`;
-                const shareText = `SkillHive par verified professional dekhein! 🛠️\n\n👤 ${pro.name}\n💼 ${pro.skill}\n📍 ${pro.area ? pro.area + ', ' : ''}${pro.city}\n\nBook direct here:\n${profileUrl}`;
+                // WhatsApp strictly requires live TLDs (like .app/.com) to create blue hyperlinks. 
+                // This logic spoofs a live URL during localhost testing and uses the real one in production.
+                let domain = window.location.origin;
+                if (domain.includes('127.0.0.1') || domain.includes('localhost')) {
+                    domain = 'https://skillhive.vercel.app'; // Prod structure for WhatsApp parsing
+                }
+                
+                const profileUrl = `${domain}/profile.html?id=${pro.profile_slug || pro.new_id}`;
+                
+                // Premium WhatsApp Formatting (Bold texts and clear spacing)
+                const shareText = `*SkillHive Verified Professional* 🛠️\n\n👤 *${pro.name}*\n💼 ${pro.skill}\n📍 ${pro.city}\n\n👉 *Click the link below to view profile & book:*\n${profileUrl}`;
+                
                 window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
             };
         }
