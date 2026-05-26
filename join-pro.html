@@ -688,30 +688,26 @@
 
                 <div class="divider-or">OR SELECT MANUALLY</div>
 
-                <!-- City Dropdown -->
                 <div class="field-group">
-                    <label class="field-label" for="proCity">
+                    <label class="field-label" for="citySelect">
                         <i class="fa-solid fa-city"></i> Base City
                     </label>
                     <div class="input-wrap">
                         <i class="fa-solid fa-city field-icon"></i>
-                        <select id="proCity" onchange="loadAreas()">
-                            <option value="" disabled selected>Select your city</option>
-                            <option value="Samundri">Samundri</option>
-                            <option value="Faisalabad">Faisalabad</option>
+                        <select id="citySelect" name="city" onchange="updateAreas()">
+                            <option value="" disabled selected>-- Choose City --</option>
                         </select>
                     </div>
                 </div>
-
-                <!-- Area Dropdown -->
+                
                 <div class="field-group">
-                    <label class="field-label" for="proArea">
+                    <label class="field-label" for="areaSelect">
                         <i class="fa-solid fa-map-location-dot"></i> Area / Neighbourhood
                     </label>
                     <div class="input-wrap">
                         <i class="fa-solid fa-map-location-dot field-icon"></i>
-                        <select id="proArea" disabled>
-                            <option value="" disabled selected>First select a city</option>
+                        <select id="areaSelect" name="neighborhood" disabled style="opacity: 0.6; cursor: not-allowed;">
+                            <option value="" disabled selected>-- Select City First --</option>
                         </select>
                     </div>
                 </div>
@@ -781,6 +777,14 @@
                     <div class="input-wrap">
                         <i class="fa-solid fa-award field-icon"></i>
                         <input type="number" id="proExperience" placeholder="e.g. 5" min="0" max="50">
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="proPin">Secret Login PIN (4 Digits)</label>
+                    <div class="input-wrap">
+                        <i class="fa-solid fa-lock field-icon"></i>
+                        <input type="password" id="proPin" placeholder="e.g. 1234" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password">
                     </div>
                 </div>
 
@@ -967,8 +971,8 @@
         // ════════════════════════════════════════════════════════════════
         function validateStep(step) {
             if (step === 1) {
-                const city   = document.getElementById('proCity').value;
-                const area   = document.getElementById('proArea').value;
+                const city   = document.getElementById('citySelect').value;
+                const area   = document.getElementById('areaSelect').value;
                 const hasGPS = capturedCoords.lat !== null;
                 if (!hasGPS && (!city || !area)) {
                     showToast('Please verify GPS location or select City & Area manually.');
@@ -981,10 +985,13 @@
                 const phone = document.getElementById('proPhone').value.trim();
                 const skill = document.getElementById('proSkill').value;
                 const exp   = document.getElementById('proExperience').value;
+                const pin   = document.getElementById('proPin').value.trim();
+
                 if (!name)  { showToast('Please enter your full name.'); return false; }
                 if (!phone || phone.length < 10) { showToast('Please enter a valid WhatsApp number.'); return false; }
                 if (!skill) { showToast('Please select your primary profession.'); return false; }
                 if (exp === '' || exp === null) { showToast('Please enter your years of experience.'); return false; }
+                if (!pin || pin.length !== 4 || isNaN(pin)) { showToast('Please set a strict 4-digit PIN for future login.'); return false; }
                 return true;
             }
             return true;
@@ -1006,59 +1013,47 @@
                 (position) => {
                     capturedCoords.lat = position.coords.latitude;
                     capturedCoords.lng = position.coords.longitude;
+                    capturedCoords.source = 'gps'; // Tag the source
 
                     const display = `${capturedCoords.lat.toFixed(6)}°N, ${capturedCoords.lng.toFixed(6)}°E`;
                     document.getElementById('coordsDisplay').textContent = display;
-
                     document.getElementById('locationResultCard').classList.add('show');
 
-                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Location Verified';
-                    btn.style.borderColor = 'var(--green)';
-                    btn.style.color = 'var(--green)';
-                    btn.disabled = false;
-
-                    showToast('GPS location captured successfully!', 'success');
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mapping City...';
+                    
+                    // Auto-fill Dropdowns via Reverse Geocoding
+                    reverseGeocode(capturedCoords.lat, capturedCoords.lng).then(address => {
+                        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Location Verified';
+                        btn.style.borderColor = 'var(--green)';
+                        btn.style.color = 'var(--green)';
+                        btn.disabled = false;
+                        
+                        if (address && (address.city || address.town || address.county)) {
+                            const foundCity = Object.keys(window.pakLocations).find(c => 
+                                (address.city && address.city.includes(c)) || 
+                                (address.town && address.town.includes(c)) ||
+                                (address.county && address.county.includes(c))
+                            );
+                            if (foundCity) {
+                                document.getElementById('citySelect').value = foundCity;
+                                window.updateAreas();
+                                showToast(`GPS auto-matched with ${foundCity}!`, 'success');
+                            } else {
+                                showToast('GPS verified! Please select your specific City/Area.', 'success');
+                            }
+                        } else {
+                            showToast('GPS verified! Please select your specific City/Area.', 'success');
+                        }
+                    });
                 },
                 (error) => {
-                    const messages = {
-                        1: 'Location permission denied. Please use the manual dropdowns.',
-                        2: 'Location unavailable. Please use the manual dropdowns.',
-                        3: 'Location request timed out. Please try again.'
-                    };
-                    showToast(messages[error.code] || 'Failed to get location.');
+                    const messages = { 1: 'Location permission denied.', 2: 'Location unavailable.', 3: 'Timeout.' };
+                    showToast(messages[error.code] || 'Failed to get location. Use manual selection.');
                     btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Verify Current Location via GPS';
                     btn.disabled = false;
                 },
                 { timeout: 12000, enableHighAccuracy: true, maximumAge: 0 }
             );
-        }
-
-        const areasData = {
-            'Samundri': [
-                { id: 'gojra-road',     name: 'Gojra Road' },
-                { id: 'katchery-bazar', name: 'Katchery Bazar' },
-                { id: 'rajbah-road',    name: 'Rajbah Road' }
-            ],
-            'Faisalabad': [
-                { id: 'd-ground',  name: 'D-Ground' },
-                { id: 'kohinoor', name: 'Kohinoor City' }
-            ]
-        };
-
-        function loadAreas() {
-            const city = document.getElementById('proCity').value;
-            const areaSelect = document.getElementById('proArea');
-            areaSelect.innerHTML = '<option value="" disabled selected>Select your area</option>';
-            if (city && areasData[city]) {
-                areaSelect.disabled = false;
-                areasData[city].forEach(a => {
-                    const opt = document.createElement('option');
-                    opt.value = a.id; opt.text = a.name;
-                    areaSelect.appendChild(opt);
-                });
-            } else {
-                areaSelect.disabled = true;
-            }
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -1258,6 +1253,48 @@
         // ════════════════════════════════════════════════════════════════
         //  FINAL SUBMIT — Supabase Storage + DB Pipeline
         // ════════════════════════════════════════════════════════════════
+        // ════════════════════════════════════════════════════════════════
+        //  SMART GEOCODING ENGINE (Hybrid System)
+        // ════════════════════════════════════════════════════════════════
+        const fallbackCoords = {
+            "Samundri": { lat: 31.0630, lng: 72.9620 },
+            "Faisalabad": { lat: 31.4504, lng: 73.1350 },
+            "Lahore": { lat: 31.5204, lng: 74.3587 },
+            "Islamabad": { lat: 33.6844, lng: 73.0479 },
+            "Karachi": { lat: 24.8607, lng: 67.0011 },
+            "Rawalpindi": { lat: 33.5973, lng: 73.0479 },
+            "Multan": { lat: 30.1968, lng: 71.4697 },
+            "Peshawar": { lat: 34.0151, lng: 71.5249 },
+            "Quetta": { lat: 30.1798, lng: 66.9750 },
+            "Hyderabad": { lat: 25.3960, lng: 68.3578 }
+        };
+
+        async function reverseGeocode(lat, lng) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
+                const data = await res.json();
+                return data.address;
+            } catch (err) {
+                console.error("Reverse Geocoding Failed", err);
+                return null;
+            }
+        }
+
+        async function forwardGeocode(city, area) {
+            try {
+                const query = encodeURIComponent(`${area}, ${city}, Pakistan`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                }
+                return null;
+            } catch (err) {
+                console.error("Forward Geocoding Failed", err);
+                return null;
+            }
+        }
+
         window.submitProProfile = async function() {
             if (!selfieBlob) {
                 showToast('Please take a selfie before submitting!');
@@ -1268,29 +1305,64 @@
             const phone = document.getElementById('proPhone').value.trim();
             const skill = document.getElementById('proSkill').value;
             const exp   = parseInt(document.getElementById('proExperience').value, 10);
-            const city  = document.getElementById('proCity').value;
-            const area  = document.getElementById('proArea').value;
+            const city  = document.getElementById('citySelect').value;
+            const area  = document.getElementById('areaSelect').value;
+            const pin   = document.getElementById('proPin').value.trim(); // NEW PIN
 
             if (!name || !phone || !skill || isNaN(exp)) {
                 showToast('Please complete all profile fields in Step 2.');
+                return;
+            }
+            // Strict Text Guard
+            if (!city || !area) {
+                showToast('City and Area MUST be selected in Step 1.');
                 return;
             }
 
             const loadingOverlay = document.getElementById('loadingOverlay');
             const loadingText    = document.getElementById('loadingText');
             loadingOverlay.classList.add('show');
-            loadingText.textContent = 'Uploading selfie to secure storage...';
+            loadingText.textContent = 'Verifying Smart Location Data...';
 
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
 
             try {
+                // ── GEOCODING INTELLIGENCE PIPELINE ───────────────
+                let finalLat = capturedCoords.lat;
+                let finalLng = capturedCoords.lng;
+                let locSource = capturedCoords.source || 'geocoded';
+
+                if (!finalLat || !finalLng) {
+                    // Forward Geocode manual input
+                    const geoResult = await forwardGeocode(city, area);
+                    if (geoResult) {
+                        finalLat = geoResult.lat;
+                        finalLng = geoResult.lng;
+                        locSource = 'geocoded';
+                    } else {
+                        // Local Table Fallback
+                        if (fallbackCoords[city]) {
+                            finalLat = fallbackCoords[city].lat;
+                            finalLng = fallbackCoords[city].lng;
+                            locSource = 'fallback';
+                        } else {
+                            throw new Error('Location could not be mapped. Please use GPS.');
+                        }
+                    }
+                }
+
+                // ── AUTO-SLUG GENERATOR (SEO Friendly URL) ────────
+                const cleanString = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                const phoneTail = phone.slice(-4);
+                const profileSlug = `${cleanString(name)}-${cleanString(skill)}-${cleanString(city)}-${phoneTail}`;
+
                 // ── 1. Upload selfie to Supabase Storage ─────────────
+                loadingText.textContent = 'Uploading selfie to secure storage...';
                 const selfieExt  = 'jpg';
                 const selfiePath = `selfies/${Date.now()}_${Math.random().toString(36).slice(2)}.${selfieExt}`;
                 const selfieUrl  = await uploadToStorage(selfieBlob, selfiePath);
-                console.log('[SkillHive] Selfie uploaded:', selfieUrl);
-
+                
                 // ── 2. Upload portfolio images ────────────────────────
                 loadingText.textContent = `Uploading portfolio images...`;
                 const portfolioUrls = [];
@@ -1299,7 +1371,6 @@
                     const path = `portfolio/${Date.now()}_${i}_${Math.random().toString(36).slice(2)}.${ext}`;
                     const url  = await uploadToStorage(file, path);
                     portfolioUrls.push(url);
-                    console.log(`[SkillHive] Portfolio image ${i + 1} uploaded:`, url);
                 }
 
                 // ── 3. Insert record into professionals table ─────────
@@ -1309,14 +1380,17 @@
                     name:           name,
                     phone:          `+92${phone}`,
                     skill:          skill,
-                    city:           city  || '',
-                    area:           area  || '',
+                    city:           city,
+                    area:           area,
                     experience:     isNaN(exp) ? 0 : exp,
-                    lat:            capturedCoords.lat,
-                    lng:            capturedCoords.lng,
+                    lat:            finalLat,
+                    lng:            finalLng,
+                    location_source: locSource,
                     selfie_url:     selfieUrl,
-                    portfolio_urls: portfolioUrls,   // array of public Storage URLs
-                    status:         'Pending'
+                    portfolio_urls: portfolioUrls,
+                    status:         'Pending',
+                    pin:            pin,             // SECURE LOGIN PIN
+                    profile_slug:   profileSlug      // THE PUBLIC URL SLUG
                 };
 
                 const { data: inserted, error: dbError } = await _sb
@@ -1325,8 +1399,7 @@
                     .select();
 
                 if (dbError) throw dbError;
-                console.log('[SkillHive] Professional inserted:', inserted);
-
+                
                 // ── 4. Show success screen ────────────────────────────
                 stopCameraStream();
                 loadingOverlay.classList.remove('show');
@@ -1341,7 +1414,67 @@
                 submitBtn.disabled = false;
                 showToast(`Submission failed: ${error.message || 'Please try again.'}`);
             }
-        };
+        }
+
+// National Level Cities & Neighborhoods Data
+window.pakLocations = {
+    "Samundri": ["Katchery Bazar", "Gojra Road", "Faisalabad Road", "Main Bazar", "Tandlianwala Road"],
+    "Faisalabad": ["Ghanta Ghar", "Kohinoor City", "D-Ground", "Canal Road", "Sargodha Road"],
+    "Lahore": ["Gulberg", "DHA", "Johar Town", "Model Town", "Anarkali"],
+    "Islamabad": ["Blue Area", "F-7 Sector", "G-9 Markaz", "Bahria Town", "G-11"],
+    "Karachi": ["Clifton", "DHA", "Gulshan-e-Iqbal", "North Nazimabad", "Saddar"],
+    "Rawalpindi": ["Saddar", "Bahria Town", "Satellite Town", "Commercial Market"],
+    "Multan": ["Bosan Road", "Gulgasht Colony", "Multan Cantt", "Shah Rukn-e-Alam"],
+    "Peshawar": ["Hayatabad", "University Road", "Saddar", "Board Bazar"],
+    "Quetta": ["Jinnah Road", "Satellite Town", "Quetta Cantt", "Zarghoon Road"],
+    "Hyderabad": ["Latifabad", "Qasimabad", "Auto Bhan Road", "Saddar"]
+};
+
+// Robust Initialization Function for Dropdowns
+window.initLocationDropdowns = function() {
+    const citySelect = document.getElementById("citySelect");
+    if (!citySelect) return;
+    
+    // Clear existing options except the first placeholder
+    citySelect.innerHTML = '<option value="" disabled selected>-- Choose City --</option>';
+    
+    for (const city in window.pakLocations) {
+        let option = document.createElement("option");
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+    }
+};
+
+// Execute immediately to guarantee population
+window.initLocationDropdowns();
+
+// Update Areas when City changes
+window.updateAreas = function() {
+    const citySelect = document.getElementById("citySelect");
+    const areaSelect = document.getElementById("areaSelect");
+    const selectedCity = citySelect.value;
+
+    // Reset Area Dropdown
+    areaSelect.innerHTML = '<option value="" disabled selected>-- Select Area / Maqam --</option>';
+    
+    if (selectedCity && window.pakLocations[selectedCity]) {
+        areaSelect.disabled = false;
+        areaSelect.style.opacity = "1";
+        areaSelect.style.cursor = "pointer";
+        
+        window.pakLocations[selectedCity].forEach(area => {
+            let option = document.createElement("option");
+            option.value = area;
+            option.textContent = area;
+            areaSelect.appendChild(option);
+        });
+    } else {
+        areaSelect.disabled = true;
+        areaSelect.style.opacity = "0.6";
+        areaSelect.style.cursor = "not-allowed";
+    }
+};
     </script>
 
 </body>

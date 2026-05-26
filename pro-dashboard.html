@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillHive Pro | Professional Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; }
+        
+        :root {
+            --bg-base:     #080e1a;
+            --bg-surface:  #0f1928;
+            --bg-card:     #131f35;
+            --border:      rgba(255,255,255,0.07);
+            --border-2:    rgba(255,255,255,0.14);
+            --gold:        #f5a623;
+            --gold-dark:   #c7851a;
+            --gold-glow:   rgba(245,166,35,0.15);
+            --white:       #ffffff;
+            --text-primary: rgba(255,255,255,0.92);
+            --text-secondary: rgba(255,255,255,0.55);
+            --green:       #22c55e;
+            --green-glow:  rgba(34,197,94,0.15);
+            --red:         #ef4444;
+            --radius-xl:   24px;
+            --radius-lg:   16px;
+            --radius-md:   12px;
+        }
+
+        body { background: var(--bg-base); color: var(--text-primary); min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow-x: hidden; position: relative; }
+        
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse at 10% 10%, rgba(245,166,35,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 90%, rgba(42,82,152,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(8,14,26,0.95) 0%, transparent 100%);
+        }
+
+        .container { position: relative; z-index: 1; width: 100%; max-width: 460px; padding: 16px; }
+        
+        .glass-card {
+            background: rgba(19, 31, 53, 0.65);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--border-2);
+            border-radius: var(--radius-xl);
+            padding: 40px 32px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .header { text-align: center; margin-bottom: 32px; }
+        .header h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -1px; }
+        .header h1 span { color: var(--gold); }
+        .header p { color: var(--text-secondary); font-size: 0.88rem; margin-top: 6px; font-weight: 500; }
+
+        .input-group { margin-bottom: 18px; position: relative; text-align: left; }
+        .input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.95rem; transition: color 0.3s; z-index: 2; }
+        .input-group input { width: 100%; padding: 15px 15px 15px 46px; border-radius: var(--radius-md); border: 1.5px solid var(--border); background: rgba(255,255,255,0.04); color: var(--white); font-size: 0.95rem; font-weight: 500; outline: none; transition: all 0.25s; }
+        .input-group input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold-glow); background: rgba(255,255,255,0.07); }
+        .input-group input:focus + i { color: var(--gold); }
+        
+        .btn-primary { width: 100%; padding: 15px; background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: var(--bg-base); font-weight: 800; font-size: 0.98rem; border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.25s; display: flex; justify-content: center; gap: 10px; align-items: center; box-shadow: 0 6px 20px rgba(245,166,35,0.25); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(245,166,35,0.45); }
+
+        #loginScreen { animation: fadeIn 0.4s ease forwards; }
+        #dashboardScreen { display: none; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .status-box { text-align: center; padding: 24px; border-radius: var(--radius-lg); margin-bottom: 24px; border: 1px solid; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .status-box.pending { background: rgba(245,166,35,0.08); border-color: rgba(245,166,35,0.25); color: var(--gold); }
+        .status-box.active { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.25); color: var(--green); }
+        .status-box h3 { font-size: 1.1rem; font-weight: 700; }
+        .status-box p { color: var(--text-secondary); font-size: 0.82rem; }
+        
+        .link-box { background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border); padding: 20px; border-radius: var(--radius-lg); margin-bottom: 24px; text-align: left; }
+        .link-box label { font-size: 0.72rem; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
+        .link-container { display: flex; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; align-items: center; justify-content: space-between; gap: 10px; }
+        .link-url { font-size: 0.88rem; color: #60a5fa; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .btn-copy { background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--white); padding: 8px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+        .btn-copy:hover { background: rgba(255,255,255,0.15); color: var(--gold); border-color: rgba(245,166,35,0.3); }
+
+        .toggle-box { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+        .toggle-box p { font-size: 0.95rem; font-weight: 600; }
+        .toggle-box small { color: var(--text-secondary); font-size: 0.78rem; display: block; margin-top: 2px; }
+        
+        .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: rgba(255,255,255,0.15); transition: .3s cubic-bezier(0.16, 1, 0.3, 1); border-radius: 34px; border: 1px solid var(--border); }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: var(--white); transition: .3s cubic-bezier(0.16, 1, 0.3, 1); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--green); border-color: rgba(34,197,94,0.3); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px); background: linear-gradient(135deg, #16a34a, #22c55e); color: white; padding: 12px 24px; border-radius: 50px; font-size: 0.88rem; font-weight: 600; opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast.error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+        .shake { animation: shake 0.4s ease; border-color: var(--red) !important; box-shadow: 0 0 0 4px rgba(239,68,68,0.15) !important; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+</style>
+</head>
+<body>
+
+    <div class="bg-mesh"></div>
+    <div id="toast"></div>
+
+    <div class="container">
+        <div class="glass-card">
+            <div class="header">
+                <h1>Skill<span>Hive</span> Pro</h1>
+                <p id="headerSub">Ustad Control Panel</p>
+            </div>
+
+            <div id="loginScreen">
+                <div class="input-group">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <input type="tel" id="loginPhone" placeholder="WhatsApp Number (e.g. 03001234567)">
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="loginPin" placeholder="4-Digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+                </div>
+                <button class="btn-primary" id="loginBtn" onclick="attemptLogin()">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In to Dashboard
+                </button>
+            </div>
+
+            <div id="dashboardScreen">
+                <div class="avatar-management-box" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 20px; border-radius: var(--radius-lg); margin-bottom: 24px; text-align: center; position: relative;">
+                    <div id="dashAvatarDisplay" style="width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 12px; border: 2px solid var(--gold); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.5rem; color: white;"></div>
+                    <label for="avatarFileInput" class="btn-copy" style="display: inline-flex; margin: 0 auto; padding: 6px 12px; cursor: pointer;">
+                        <i class="fa-solid fa-camera"></i> Change Photo
+                    </label>
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="uploadNewProfilePicture(event)">
+                </div>
+                <div id="statusAlert" class="status-box pending"></div>
+
+                <div class="link-box" id="linkBox" style="display:none;">
+                    <label>Your Public Digital Shop URL</label>
+                    <div class="link-container">
+                        <div class="link-url" id="publicUrl">skillhive.netlify.app/pro/...</div>
+                        <button class="btn-copy" id="copyBtn" onclick="copyMyLink()">
+                            <i class="fa-regular fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="toggle-box">
+                    <div>
+                        <p>Active Status</p>
+                        <small id="toggleStatusText">Loading availability state...</small>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="availToggle" onchange="toggleAvailability()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button class="btn-primary" style="margin-top:24px; background:rgba(255,255,255,0.06); color:var(--text-secondary); border: 1px solid var(--border); box-shadow: none;" onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="backend.js"></script>
+
+    <script>
+        'use strict';
+        const _sb = window._supabase;
+        let currentProData = null;
+
+        async function uploadNewProfilePicture(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showToast('Uploading new photo...');
+            try {
+                const ext = file.name.split('.').pop() || 'jpg';
+                const path = `selfies/${Date.now()}_${Math.random().toString(36).slice(2)}_update.${ext}`;
+                
+                // Upload to skillhive-media storage bucket (Strictly insert-only to pass RLS)
+                const { data, error: uploadError } = await _sb.storage
+                    .from('skillhive-media')
+                    .upload(path, file, { cacheControl: '3600', upsert: false });
+
+                if (uploadError) throw uploadError;
+
+                const { data: urlData } = _sb.storage.from('skillhive-media').getPublicUrl(data.path);
+                const newPhotoUrl = urlData.publicUrl;
+
+                // Sync to professionals table row
+                const { error: dbError } = await _sb
+                    .from('professionals')
+                    .update({ selfie_url: newPhotoUrl })
+                    .eq('new_id', currentProData.new_id);
+
+                if (dbError) throw dbError;
+
+                // Mutate state & refresh layout dynamically
+                currentProData.selfie_url = newPhotoUrl;
+                renderDashboardAvatar(newPhotoUrl, currentProData.name);
+                showToast('Profile picture updated live!', false);
+            } catch (err) {
+                console.error(err);
+                showToast('Photo synchronization failed.', true);
+            }
+        }
+
+        function renderDashboardAvatar(url, name) {
+            const el = document.getElementById('dashAvatarDisplay');
+            if (url && url.startsWith('http')) {
+                el.style.backgroundImage = `url('${url}')`;
+                el.innerHTML = '';
+            } else {
+                el.style.backgroundImage = 'none';
+                el.textContent = name ? name.charAt(0).toUpperCase() : 'U';
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = isError ? `<i class="fa-solid fa-circle-exclamation"></i> ${msg}` : `<i class="fa-solid fa-circle-check"></i> ${msg}`;
+            toast.className = isError ? 'show error' : 'show';
+            setTimeout(() => toast.className = '', 3500);
+        }
+
+        async function attemptLogin() {
+            let phone = document.getElementById('loginPhone').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+            const btn = document.getElementById('loginBtn');
+            const card = document.querySelector('.glass-card');
+
+            if(!phone || !pin) {
+                showToast('Please fill all credentials!', true);
+                return;
+            }
+            
+            if(phone.startsWith('0')) phone = '+92' + phone.substring(1);
+            if(!phone.startsWith('+92')) phone = '+92' + phone;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+            
+            try {
+                const { data, error } = await _sb
+                    .from('professionals')
+                    .select('*')
+                    .eq('phone', phone)
+                    .eq('pin', pin)
+                    .single();
+
+                if (error || !data) throw new Error('Incorrect Phone Number or security PIN!');
+
+                currentProData = data;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboardScreen').style.display = 'block';
+                document.getElementById('headerSub').textContent = `Welcome Back, ${data.name}`;
+                
+                renderDashboardAvatar(data.selfie_url, data.name);
+                setupDashboard(data);
+                showToast('Authenticated Successfully!');
+
+            } catch (err) {
+                showToast(err.message, true);
+                document.getElementById('loginPin').value = '';
+                card.classList.add('shake');
+                setTimeout(() => card.classList.remove('shake'), 400);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In to Dashboard';
+            }
+        }
+
+        function setupDashboard(data) {
+            const statusBox = document.getElementById('statusAlert');
+            const linkBox = document.getElementById('linkBox');
+            const toggle = document.getElementById('availToggle');
+            const statusTxt = document.getElementById('toggleStatusText');
+
+            toggle.checked = data.is_available;
+            statusTxt.textContent = data.is_available ? 'You are visible on radar' : 'You are currently hidden';
+
+            if(data.status.toLowerCase() === 'active') {
+                statusBox.className = 'status-box active';
+                statusBox.innerHTML = '<i class="fa-solid fa-circle-check fa-2x"></i><h3>Profile is Verified & Live</h3><p>Your business anchor is actively catching customer leads.</p>';
+                
+                const baseUrl = window.location.origin;
+                const fullLink = `${baseUrl}/profile.html?id=${data.profile_slug}`;
+                document.getElementById('publicUrl').textContent = fullLink;
+                linkBox.style.display = 'block';
+            } else {
+                statusBox.className = 'status-box pending';
+                statusBox.innerHTML = '<i class="fa-solid fa-hourglass-half fa-2x"></i><h3>Application Under Review</h3><p>Security vetting is active. The portal link unlocks post approval.</p>';
+                linkBox.style.display = 'none';
+            }
+        }
+
+        async function toggleAvailability() {
+            const toggle = document.getElementById('availToggle');
+            const isAvailable = toggle.checked;
+            const statusTxt = document.getElementById('toggleStatusText');
+            
+            statusTxt.textContent = 'Updating radar...';
+
+            try {
+                const { error } = await _sb
+                    .from('professionals')
+                    .update({ is_available: isAvailable })
+                    .eq('new_id', currentProData.new_id);
+                
+                if(error) throw error;
+                statusTxt.textContent = isAvailable ? 'You are visible on radar' : 'You are currently hidden';
+                showToast(isAvailable ? 'Status updated to Available Today!' : 'Marked as Busy.');
+            } catch (err) {
+                showToast('Database synchronization failed.', true);
+                toggle.checked = !isAvailable;
+                statusTxt.textContent = !isAvailable ? 'You are visible on radar' : 'You are currently hidden';
+            }
+        }
+
+        function copyMyLink() {
+            const linkText = document.getElementById('publicUrl').textContent;
+            const copyBtn = document.getElementById('copyBtn');
+            
+            navigator.clipboard.writeText(linkText);
+            showToast('URL secured to clipboard!');
+            
+            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+            }, 2000);
+        }
+
+        function logout() {
+            currentProData = null;
+            document.getElementById('loginPhone').value = '';
+            document.getElementById('loginPin').value = '';
+            document.getElementById('dashboardScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('headerSub').textContent = 'Ustad Control Panel';
+            showToast('Account signed out securely.');
+        }
+    </script>
+</body>
+</html>

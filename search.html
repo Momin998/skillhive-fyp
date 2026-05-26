@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
     <style>
         /* ═══════════════════════════════════════════════════════════════════
@@ -859,6 +860,14 @@
                         <option value="">All Cities</option>
                         <option value="Samundri">Samundri</option>
                         <option value="Faisalabad">Faisalabad</option>
+                        <option value="Lahore">Lahore</option>
+                        <option value="Islamabad">Islamabad</option>
+                        <option value="Karachi">Karachi</option>
+                        <option value="Rawalpindi">Rawalpindi</option>
+                        <option value="Multan">Multan</option>
+                        <option value="Peshawar">Peshawar</option>
+                        <option value="Quetta">Quetta</option>
+                        <option value="Hyderabad">Hyderabad</option>
                     </select>
                     <button class="search-btn" id="searchBtn" onclick="runSearch()">
                         <i class="fa-solid fa-magnifying-glass"></i> Go
@@ -1046,6 +1055,12 @@
                         <div class="legend-dot user"></div> You
                     </div>
                 </div>
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000]">
+                    <button id="heatmapToggleBtn" onclick="toggleDemandHeatmap()" class="bg-[#1a3a5c]/95 backdrop-blur-md border border-[#f5a623]/40 text-white text-[13px] font-bold py-2.5 px-6 rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.25)] hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(245,166,35,0.2)] transition-all duration-300 flex items-center gap-2">
+                        <i class="fa-solid fa-fire text-[#f5a623] text-sm" id="heatmapIcon"></i>
+                        <span id="heatmapText" class="tracking-wide">Show Demand Heatmap</span>
+                    </button>
+                </div>
 
                 <!-- Leaflet Map -->
                 <div id="searchMap"></div>
@@ -1112,10 +1127,18 @@
     <script>
         'use strict';
 
-        /* ── City center coords ──────────────────────────────────────────── */
+        /* ── City center coords (National Level) ─────────────────────────── */
         const CITY_COORDS = {
             'Samundri':   { lat: 31.0667, lng: 72.9667 },
             'Faisalabad': { lat: 31.4187, lng: 73.0791 },
+            'Lahore':     { lat: 31.5204, lng: 74.3587 },
+            'Islamabad':  { lat: 33.6844, lng: 73.0479 },
+            'Karachi':    { lat: 24.8607, lng: 67.0011 },
+            'Rawalpindi': { lat: 33.5909, lng: 73.0535 },
+            'Multan':     { lat: 30.1575, lng: 71.5249 },
+            'Peshawar':   { lat: 34.0151, lng: 71.5249 },
+            'Quetta':     { lat: 30.1798, lng: 66.9750 },
+            'Hyderabad':  { lat: 25.3960, lng: 68.3578 },
             'default':    { lat: 31.2000, lng: 73.0000 }
         };
 
@@ -1133,6 +1156,8 @@
         let userMarker     = null;
         let userLat        = null;   // GPS: user latitude
         let userLng        = null;   // GPS: user longitude
+        let heatLayer      = null;
+        let isHeatmapActive= false;
 
         /* ── Toast ───────────────────────────────────────────────────────── */
         function showToast(msg, type = 'info') {
@@ -1459,6 +1484,20 @@
                     : '';
                 const verifiedTrustBadge = isVerified ? `<span class="badge-verified">ID Verified ✅</span>` : '';
 
+                // Dynamic Availability Engine
+                const isAvailable = pro.is_available !== false; // defaults to true
+                const availabilityBadge = !isAvailable 
+                    ? `<span class="badge-rating" style="background:rgba(239,68,68,0.1); color:#ef4444; border-color:rgba(239,68,68,0.3);">🔴 Busy Today</span>` 
+                    : '';
+
+                const waButton = isAvailable 
+                    ? `<button onclick="connectWhatsApp('${pro.name}', '${pro.phone}', '${pro.skill}')" class="w-full py-1.5 rounded bg-gradient-to-r from-[#25D366] to-[#1da851] text-white text-[11px] uppercase tracking-wider font-bold flex items-center justify-center gap-1 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                            <i class="fa-brands fa-whatsapp text-sm"></i> Chat
+                       </button>`
+                    : `<button disabled class="w-full py-1.5 rounded bg-white/10 border border-white/10 text-white/50 text-[11px] uppercase tracking-wider font-bold flex items-center justify-center gap-1 cursor-not-allowed" title="Professional is currently busy">
+                            <i class="fa-solid fa-clock text-sm"></i> Busy
+                       </button>`;
+
                 const phone    = (pro.phone || '').replace(/\D/g, '');
                 const city     = pro.city || 'N/A';
                 const area     = pro.area || '';
@@ -1488,6 +1527,7 @@
                         <div class="trust-badge-row">
                             ${verifiedTrustBadge}
                             ${trustBadgeHtml}
+                            ${availabilityBadge}
                             ${distanceBadgeHtml}
                         </div>
                         <div class="card-location">
@@ -1495,12 +1535,10 @@
                             ${location}
                         </div>
                     </div>
-                    <div class="card-action flex gap-2 !w-auto">
-                        <button class="card-book-btn !flex-1" onclick="chatOnWhatsApp('${phone}', event)">
-                            <i class="fa-brands fa-whatsapp"></i> Chat
-                        </button>
-                        <button class="flex-1 rounded-md bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-bold py-2 px-3 text-xs flex items-center justify-center gap-1 hover:shadow-lg transition-all" onclick="openReviewModal('${pro.new_id || pro.id}', '${phone}', '${pro.name}', event)">
-                            <i class="fa-solid fa-star"></i> Rate
+                    <div class="card-action flex flex-col gap-2 w-[90px] shrink-0 ml-auto my-auto pl-2">
+                        ${waButton}
+                        <button onclick="openReviewModal('${pro.new_id || pro.id}', '${phone}', '${pro.name}', event)" class="w-full py-1.5 rounded bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-[11px] uppercase tracking-wider font-bold flex items-center justify-center gap-1 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                            <i class="fa-solid fa-star text-sm"></i> Rate
                         </button>
                     </div>
                 `;
@@ -1526,6 +1564,9 @@
                 latLngs.push(L.latLng(centerLat, centerLng));
                 mapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [55, 55], maxZoom: 15 });
             }
+
+            // Redraw heatmap if active
+            if (isHeatmapActive) window.drawHeatmap();
         }
 
         /* ── WhatsApp chat link ───────────────────────────────────────────── */
@@ -1536,6 +1577,51 @@
         }
 
         // FIXED: BUG 6 - Deleted local fetchActiveProfessionals
+
+        /* ── Heatmap Data Analytics Logic ────────────────────────────────── */
+        window.toggleDemandHeatmap = function() {
+            isHeatmapActive = !isHeatmapActive;
+            const btn = document.getElementById('heatmapToggleBtn');
+            const icon = document.getElementById('heatmapIcon');
+            const text = document.getElementById('heatmapText');
+
+            if (isHeatmapActive) {
+                btn.classList.replace('bg-[#1a3a5c]/95', 'bg-gradient-to-r');
+                btn.classList.add('from-red-600', 'to-yellow-500', 'border-yellow-400');
+                icon.classList.replace('text-[#f5a623]', 'text-white');
+                text.textContent = 'Hide Heatmap';
+                drawHeatmap();
+                showToast('Demand Heatmap Activated 🔥', 'success');
+            } else {
+                btn.classList.replace('bg-gradient-to-r', 'bg-[#1a3a5c]/95');
+                btn.classList.remove('from-red-600', 'to-yellow-500', 'border-yellow-400');
+                icon.classList.replace('text-white', 'text-[#f5a623]');
+                text.textContent = 'Show Demand Heatmap';
+                if (heatLayer && mapInstance) {
+                    mapInstance.removeLayer(heatLayer);
+                }
+            }
+        };
+
+        window.drawHeatmap = function() {
+            if (!isHeatmapActive || !mapInstance) return;
+            
+            if (heatLayer) mapInstance.removeLayer(heatLayer);
+            if (!currentPros || currentPros.length === 0) return;
+
+            const heatData = currentPros.map(pro => {
+                const lat = pro._lat ?? pro.lat;
+                const lng = pro._lng ?? pro.lng;
+                return [lat, lng, 1]; // Coordinates with intensity
+            });
+
+            heatLayer = L.heatLayer(heatData, {
+                radius: 35,
+                blur: 25,
+                maxZoom: 15,
+                gradient: { 0.2: '#3b82f6', 0.4: '#22c55e', 0.6: '#eab308', 0.8: '#f97316', 1.0: '#ef4444' }
+            }).addTo(mapInstance);
+        };
 
         /* ── Main search runner ───────────────────────────────────────────── */
         async function runSearch() {
@@ -1775,7 +1861,65 @@
                     console.log('[Search] Realtime Reviews subscription:', status);
                 });
         }
+
+// Global variables for WhatsApp Modal
+window.currentWaPro = { name: '', phone: '', skill: '' };
+
+window.connectWhatsApp = function(proName, phone, skill) {
+    window.currentWaPro = { name: proName, phone: phone, skill: skill };
+    document.getElementById('waIssueText').value = ''; 
+    const modal = document.getElementById('waModal');
+    const modalCard = document.getElementById('waModalCard');
+    
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        modalCard.style.transform = 'translateY(0)';
+    }, 10);
+};
+
+window.closeWaModal = function() {
+    const modal = document.getElementById('waModal');
+    const modalCard = document.getElementById('waModalCard');
+    
+    modal.style.opacity = '0';
+    modalCard.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+};
+
+window.sendToWhatsApp = function() {
+    let userIssue = document.getElementById('waIssueText').value;
+    if (!userIssue || userIssue.trim() === "") {
+        alert("Bhai, apna masla to likhein!");
+        return;
+    }
+    
+    let cleanPhone = window.currentWaPro.phone.replace(/\\+/g, '');
+    let rawMessage = `Assalam o Alaikum ${window.currentWaPro.name} bhai! Main SkillHive platform se aya hoon. Mujhe Samundri mein ${window.currentWaPro.skill} ki service chahiye. Mera masla yeh hai: ${userIssue}. Kya aap available hain?`;
+    
+    let finalUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(rawMessage)}`;
+    window.open(finalUrl, '_blank');
+    closeWaModal();
+};
     </script>
 
+<div id="waModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); z-index:9999; justify-content:center; align-items:center; opacity:0; transition: opacity 0.3s ease;">
+    <div class="glass-card" style="width:90%; max-width:400px; padding:24px; text-align:center; position:relative; transform: translateY(20px); transition: transform 0.3s ease; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);" id="waModalCard">
+        <h3 style="color:white; margin-bottom:10px; font-size: 1.25rem; font-weight: 600;">
+            <i class="fa-brands fa-whatsapp" style="color:#25D366; font-size: 1.5rem; vertical-align: middle; margin-right: 8px;"></i> 
+            Apna Masla Batayein
+        </h3>
+        <p style="color:#a1a1aa; font-size:14px; margin-bottom:20px;">Technician ko behtar samajhne ke liye apna masla tafseel se likhein.</p>
+        
+        <textarea id="waIssueText" rows="3" style="width:100%; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.4); color:white; outline:none; resize:none; margin-bottom:20px; font-family:'Inter', sans-serif;" placeholder="Maslan: AC cooling nahi kar raha, ya motor theek karni hai..."></textarea>
+        
+        <div style="display:flex; gap:12px;">
+            <button onclick="closeWaModal()" style="flex:1; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:transparent; color:white; cursor:pointer; font-weight: 600; transition: all 0.2s;">Cancel</button>
+            <button onclick="sendToWhatsApp()" style="flex:1; padding:12px; border-radius:10px; border:none; background:#25D366; color:white; font-weight:bold; cursor:pointer; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); transition: all 0.2s;">Chat Now</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
